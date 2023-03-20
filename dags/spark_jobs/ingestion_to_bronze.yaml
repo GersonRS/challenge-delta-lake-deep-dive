@@ -6,7 +6,7 @@ metadata:
 spec:
   type: Python
   mode: cluster
-  image: "spark:0.1"
+  image: "gersonrs/spark:0.1"
   imagePullPolicy: Always
   mainApplicationFile: "local:///app/ingestion_to_bronze.py"
   sparkVersion: "3.1.1"
@@ -17,7 +17,7 @@ spec:
     onSubmissionFailureRetries: 5
     onSubmissionFailureRetryInterval: 20
   hadoopConf:
-    "fs.s3a.endpoint": "minio.deepstorage.svc.cluster.local"
+    "fs.s3a.endpoint": "minio.deepstorage.svc.cluster.local:9000"
     "fs.s3a.access.key": "gerson"
     "fs.s3a.secret.key": "rHasMuUFzGY0REI2H6RcdaJFNZp9b9ht"
     "fs.s3a.impl": "org.apache.hadoop.fs.s3a.S3AFileSystem"
