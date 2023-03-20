@@ -172,7 +172,10 @@ kubectl apply -f app-manifests/processing/spark.yaml
 kubectl apply -f app-manifests/orchestrator/airflow.yaml
 ```
 
-
+```sh
+eval $(minikube docker-env)
+docker build -f images/airflow/dockerfile images/airflow/ -t gersonrs/airflow:0.1
+```
 
 
 

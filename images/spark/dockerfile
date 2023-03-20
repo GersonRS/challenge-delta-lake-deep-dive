@@ -1,0 +1,19 @@
+# docker image [gcp]
+FROM gcr.io/spark-operator/spark-py:v3.1.1
+# using root user
+USER root:root
+# create directory for apps
+RUN mkdir -p /app
+# add jar files
+ADD https://repo1.maven.org/maven2/com/amazonaws/aws-java-sdk/1.12.430/aws-java-sdk-1.12.430.jar /opt/spark/jars/aws-java-sdk-1.12.430.jar
+ADD https://repo1.maven.org/maven2/org/apache/hadoop/hadoop-aws/3.3.4/hadoop-aws-3.3.4.jar /opt/spark/jars/hadoop-aws-3.3.4.jar
+ADD https://repo1.maven.org/maven2/org/postgresql/postgresql/42.6.0/postgresql-42.6.0.jar /opt/spark/jars/postgresql-42.6.0.jar
+# copy spark program
+COPY ingestion_to_bronze.py /app/
+COPY bronze_to_silver.py /app/
+COPY silver_to_gold.py /app/
+COPY landing/ /app/landing/
+# set work directory
+WORKDIR /app
+# user
+USER 1001
