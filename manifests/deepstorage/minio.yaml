@@ -12,12 +12,12 @@ spec:
   project: default
   source:
     repoURL: 'https://charts.bitnami.com/bitnami'
-    targetRevision: 11.10.24
+    targetRevision: 12.1.13
     helm:
       values: |-
         auth:
           existingSecret: minio-secrets
-        defaultBuckets: "landing, processing"
+        defaultBuckets: "bronze, silver, gold"
         service:
           type: LoadBalancer
         persistence:

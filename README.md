@@ -109,7 +109,7 @@ helm repo update
 helm install argocd argo/argo-cd --namespace cicd --version 5.27.1
 ```
 
-> Para que alguns serviços sejam acessiveis via loadbalancer no minikube, é necessario que você use o tunelamento do minikube.
+> Para que alguns serviços sejam acessiveis via loadbalancer no minikube, é necessario que você use o [tunelamento do minikube](https://minikube.sigs.k8s.io/docs/handbook/accessing/#example-of-loadbalancer).
 > Para isto abra uma nova aba do seu terminal e digite o seguinte commando:
 >
 >`minikube tunnel`
@@ -140,7 +140,7 @@ Uma vez em posse destas informações, acesse a interface web do argo e adicione
 
 Agora é hora de adicionar as outras ferramentas necesarias para o nosso pipeline de dados. Começando com os databases e storage do nosso pipeline de dados, execute os seguintes comandos:
 
-> Antes de executar os comando lembre-se de alterar os secrets dos arquivos localizados na pasta `secrets/` , caso queira mudar os passwords de acessos aos databases
+> Antes de executar os comando você pode alterar os secrets dos arquivos localizados na pasta `secrets/` , caso queira mudar os passwords de acessos aos databases e storage
 
 ```sh
 # secrets

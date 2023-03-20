@@ -3,7 +3,7 @@ kind: Application
 metadata:
   name: postgres
   annotations:
-    argocd.argoproj.io/sync-wave: "3"
+    argocd.argoproj.io/sync-wave: "2"
   namespace: cicd
 spec:
   destination:

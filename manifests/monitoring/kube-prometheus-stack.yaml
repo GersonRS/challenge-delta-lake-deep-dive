@@ -12,7 +12,7 @@ spec:
   project: default
   source:
     repoURL: 'https://prometheus-community.github.io/helm-charts'
-    targetRevision: 43.1.1
+    targetRevision: 45.7.1
     helm:
       skipCrds: true
       values: |-
