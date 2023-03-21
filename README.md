@@ -147,14 +147,14 @@ Agora é hora de adicionar as outras ferramentas necesarias para o nosso pipelin
 kubectl apply -f secrets/postgres-secrets.yaml
 kubectl apply -f secrets/minio-secrets.yaml
 # databases
-kubectl apply -f app-manifests/database/postgres.yaml
+kubectl apply -f manifests/database/postgres.yaml
 # deep storage
-kubectl apply -f app-manifests/deepstorage/minio.yaml
+kubectl apply -f manifests/deepstorage/minio.yaml
 ```
 
 E por fim instale o Spark e o Airflow, executando os seguintes comandos:
 
-> Antes de instalar o airflow lembre-se de alterar o **`gitSshKey`** na linha `47` do arquivo `app-manifests/orchestrator/airflow.yaml` para a chave privada do seu ssh conectado com o github
+> Antes de instalar o airflow lembre-se de alterar o **`gitSshKey`** na linha `47` do arquivo `manifests/orchestrator/airflow.yaml` para a chave privada do seu ssh conectado com o github
 
 ```sh
 # add & update helm list repos
@@ -165,12 +165,16 @@ helm repo update
 
 ```sh
 # processing
-kubectl apply -f app-manifests/processing/spark.yaml
+kubectl apply -f manifests/processing/spark.yaml
+kubectl apply -f manifests/processing/crb-spark-operator-airflow-processing.yaml
 ```
 ```sh
 # orchestrator
-kubectl apply -f app-manifests/orchestrator/airflow.yaml
+kubectl apply -f manifests/orchestrator/airflow.yaml
+kubectl apply -f manifests/orchestrator/crb-spark-operator-airflow-orchestrator.yaml
 ```
+
+
 
 ```sh
 eval $(minikube docker-env)
