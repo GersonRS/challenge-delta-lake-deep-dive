@@ -28,6 +28,10 @@ spec:
           metadataSecretName: airflow-metadata-secret
         postgresql:
           enabled: false
+        logs:
+          persistence:
+            enabled: true
+            size: 10Gi
         dags:
           gitSync:
             enabled: true

@@ -13,22 +13,6 @@ if __name__ == "__main__":
     spark = (
         SparkSession.builder.appName("ingestion-to-bronze")
         .config("spark.sql.warehouse.dir", abspath("spark-warehouse"))
-        .config("spark.hadoop.fs.s3a.endpoint", "http://10.108.233.87:9000")
-        .config("spark.hadoop.fs.s3a.access.key", "gerson")
-        .config("spark.hadoop.fs.s3a.secret.key", "rHasMuUFzGY0REI2H6RcdaJFNZp9b9ht")
-        .config("spark.hadoop.fs.s3a.path.style.access", True)
-        .config("spark.hadoop.fs.s3a.fast.upload", True)
-        .config("spark.hadoop.fs.s3a.connection.maximum", 100)
-        .config("spark.hadoop.fs.s3a.impl", "org.apache.hadoop.fs.s3a.S3AFileSystem")
-        .config(
-            "spark.delta.logStore.class",
-            "org.apache.spark.sql.delta.storage.S3SingleDriverLogStore",
-        )
-        .config("spark.sql.extensions", "io.delta.sql.DeltaSparkSessionExtension")
-        .config(
-            "spark.sql.catalog.spark_catalog",
-            "org.apache.spark.sql.delta.catalog.DeltaCatalog",
-        )
         .enableHiveSupport()
         .getOrCreate()
     )

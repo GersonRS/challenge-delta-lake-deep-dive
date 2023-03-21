@@ -130,10 +130,10 @@ kubens cicd
 Depois veja o ip atribiudo para acessar o argo e o seu respectivo password:
 ```sh
 # retrieve load balancer ip
-kubectl get services -l app.kubernetes.io/name=argocd-server,app.kubernetes.io/instance=argocd -o jsonpath="{.items[0].status.loadBalancer.ingress[0].ip}"
+kubectl get services -n cicd -l app.kubernetes.io/name=argocd-server,app.kubernetes.io/instance=argocd -o jsonpath="{.items[0].status.loadBalancer.ingress[0].ip}"
 
 # get password to log into argocd portal
-kubectl get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d
+kubectl get secret argocd-initial-admin-secret -n cicd -o jsonpath="{.data.password}" | base64 -d
 ```
 
 Uma vez em posse destas informações, acesse a interface web do argo e adicione o seu repositorio no argo.
@@ -191,40 +191,7 @@ A estrutura de arquivos está da seguinte maneira:
 
 Serão explicados os arquivos e diretórios na seção de [Edição](#edição).
 
-#### Passo Adicional no Android
-
-Para que os gestos sejam habilitados no Android é necessário um passo a mais, que é bem simples, abra o arquivo `android/app/src/main/java/<pacote_do_projeto>/MainActivity.java`, e comece importando os pacotes como abaixo:
-
-```java
-// ...
-import com.facebook.react.ReactActivity;
-// Importações adicionadas
-import com.facebook.react.ReactActivityDelegate;
-import com.facebook.react.ReactRootView;
-import com.swmansion.gesturehandler.react.RNGestureHandlerEnabledRootView;
-```
-
-Feito a importação vamos criar um método novo, logo abaixo do `getMainComponentName()`, ficando:
-
-```java
-public class MainActivity extends ReactActivity {
-  @Override
-  protected String getMainComponentName() { ... }
-  // Método adicionado
-  @Override
-  protected ReactActivityDelegate createReactActivityDelegate() {
-    return new ReactActivityDelegate(this, getMainComponentName()) {
-      @Override
-      protected ReactRootView createRootView() {
-        return new RNGestureHandlerEnabledRootView(MainActivity.this);
-      }
-    };
-  }
-}
-```
-
 ---
-
 ### Edição
 
 Nesta seção haverão instruções caso você queira editar o template, explicando para que os diretórios são utilizados e também os arquivos de configuração.
@@ -278,29 +245,6 @@ Nesta seção haverão instruções caso você queira editar o template, explica
 - **jsconfig.json** - Arquivo de configuração do JavaScript no Editor, ele é o responsável por ativar o Auto Complete de códigos JavaScript na aplicação;
 
 - **package.json** - Diferente dos projetos comuns, esse arquivo tem as configurações necessárias para a publicação do Template no NPM, para saber mais sobre isso veja a seção abaixo.
-
-### Publicação
-
-Para publicar um template como esse, o processo é bastante simples e rápido.
-
-1. Crie uma conta no [site do NPM](https://www.npmjs.com/);
-
-2. Com a conta criada execute o comando abaixo e insira suas credenciais;
-
-```sh
-npm login
-```
-
-3. Basta abrir o arquivo `package.json` e modificar as informações de acordo com o seu template, mas as informações mais importantes são duas, o `name` e o `version`, que são os únicos que tem restrições, seguem abaixo as restrições:
-
-   1. O `name` sempre deve começar com o prefixo `react-native-template-` seguido do nome do seu template;
-   2. O template deve ser publicado em uma conta pessoal, pois quando publicado em uma **Organization** é acrescentado o prefixo `@<nome_da_organization>` no nome do pacote;
-   3. O `name` deve ser único, não podendo ser igual ao de um template já publicado;
-   4. A `version` deve ser atualizada a cada publicação, se o template está na versão **0.0.1** e é preciso publicar uma atualização no mesmo, a `version` deve ser diferente e superior a versão atual, por exemplo, **0.0.2**;
-
-4. Após configurar corretamente o `package.json` basta executar no terminal/prompt o comando `npm publish`;
-
-5. Com a publicação finalizada o template deve ficar disponível através do link `https://www.npmjs.com/package/react-native-template-<nome_do_template>`.
 
 <!-- CONTRIBUTING -->
 
