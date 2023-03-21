@@ -72,7 +72,7 @@ dag = DAG(
 
 submit = SparkKubernetesOperator(
     task_id="spark_ingestion_to_bronze",
-    namespace="orchestrator",
+    namespace="processing",
     application_file="spark_jobs/ingestion_to_bronze.yaml",
     kubernetes_conn_id="kubernetes_default",
     do_xcom_push=True,
@@ -81,7 +81,7 @@ submit = SparkKubernetesOperator(
 
 sensor = SparkKubernetesSensor(
     task_id="spark_ingestion_to_bronze_monitor",
-    namespace="sampletenant",
+    namespace="processing",
     application_name="{{ task_instance.xcom_pull(task_ids='spark_pi_submit')['metadata']['name'] }}",
     kubernetes_conn_id="kubernetes_default",
     dag=dag,
