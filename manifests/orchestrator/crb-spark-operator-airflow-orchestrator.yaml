@@ -9,5 +9,8 @@ roleRef:
   name: cluster-admin
 subjects:
   - kind: ServiceAccount
+    name: airflow-worker
+    namespace: orchestrator
+  - kind: ServiceAccount
     name: default
     namespace: orchestrator

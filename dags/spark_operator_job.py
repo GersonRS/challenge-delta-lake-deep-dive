@@ -54,7 +54,8 @@ default_args = {
     "email_on_failure": False,
     "email_on_retry": False,
     "max_active_runs": 1,
-    "retries": 3,
+    "retries": 1,
+    "retry_delay": timedelta(1),
 }
 # [END default_args]
 
@@ -63,13 +64,15 @@ default_args = {
 dag = DAG(
     "spark_pi",
     default_args=default_args,
-    schedule_interval=timedelta(days=1),
-    tags=["example"],
+    schedule_interval="@once",
+    tags=["spark", "kubernetes", "s3", "sensor", "minio"],
 )
+# [END instantiate_dag]
 
-# spark = open(
-#     "example_spark_kubernetes_operator_pi.yaml").read()
-
+# [START set_tasks]
+# use spark-on-k8s to operate against the data
+# containerized spark application
+# yaml definition to trigger process
 submit = SparkKubernetesOperator(
     task_id="spark_ingestion_to_bronze",
     namespace="processing",
@@ -79,13 +82,20 @@ submit = SparkKubernetesOperator(
     dag=dag,
 )
 
+# monitor spark application
+# using sensor to determine the outcome of the task
+# read from xcom tp check the status [key & value] pair
 sensor = SparkKubernetesSensor(
     task_id="spark_ingestion_to_bronze_monitor",
     namespace="processing",
-    application_name="{{ task_instance.xcom_pull(task_ids='spark_pi_submit')['metadata']['name'] }}",
+    application_name="{{\
+        task_instance.xcom_pull(task_ids='spark_pi_submit')['metadata']['name']\
+    }}",
     kubernetes_conn_id="kubernetes_default",
     dag=dag,
     attach_log=True,
 )
-
+# [END set_tasks]
+# [START task_sequence]
 submit >> sensor
+# [END task_sequence]
