@@ -62,7 +62,7 @@ default_args = {
 # [START instantiate_dag]
 
 dag = DAG(
-    "ingestion_data_file_local_to_bronze",
+    "ingestion-from-local-data-file-to-bronze-tables",
     default_args=default_args,
     schedule_interval="@once",
     tags=["spark", "kubernetes", "s3", "sensor", "minio"],
@@ -74,9 +74,9 @@ dag = DAG(
 # containerized spark application
 # yaml definition to trigger process
 submit = SparkKubernetesOperator(
-    task_id="spark_ingestion_file_local_to_bronze",
+    task_id="task_spark_ingestion_file_local_to_bronze_table",
     namespace="processing",
-    application_file="spark_jobs/ingestion_to_bronze.yaml",
+    application_file="spark_jobs/ingestion_from_local_data_file_to_bronze_tables.yaml",
     kubernetes_conn_id="kubernetes_default",
     do_xcom_push=True,
     dag=dag,
@@ -86,11 +86,9 @@ submit = SparkKubernetesOperator(
 # using sensor to determine the outcome of the task
 # read from xcom tp check the status [key & value] pair
 sensor = SparkKubernetesSensor(
-    task_id="spark_ingestion_file_local_to_bronze_monitor",
+    task_id="task_spark_ingestion_file_local_to_bronze_table_monitor",
     namespace="processing",
-    application_name="{{\
-        task_instance.xcom_pull(task_ids='spark_ingestion_file_local_to_bronze')['metadata']['name']\
-    }}",
+    application_name="{{task_instance.xcom_pull(task_ids='task_spark_ingestion_file_local_to_bronze_table')['metadata']['name']}}",
     kubernetes_conn_id="kubernetes_default",
     dag=dag,
     attach_log=True,

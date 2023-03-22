@@ -11,7 +11,7 @@ warehouse_location = abspath("spark-warehouse")
 if __name__ == "__main__":
     # init session
     spark = (
-        SparkSession.builder.appName("etl-yelp-py")
+        SparkSession.builder.appName("transform_and_enrichment_from_bronze_to_silver")
         .config("spark.sql.warehouse.dir", abspath("spark-warehouse"))
         .enableHiveSupport()
         .getOrCreate()
@@ -25,114 +25,34 @@ if __name__ == "__main__":
 
     # set dynamic input file [hard-coded]
     # can be changed for input parameters [spark-submit]
-    get_users_file = "s3a://landing-zone/users/*.json"
-    get_business_file = "s3a://landing-zone/business/*.json"
-    get_reviews_file = "s3a://landing-zone/reviews/*.json"
+    get_users_file = "s3a://bronze/users/"
+    get_subscription_file = "s3a://bronze/subscriptions/"
+    get_credit_card_file = "s3a://bronze/credit_cards/"
+    get_movies_file = "s3a://bronze/movies/"
 
     # read user data
-    df_user = (
-        spark.read.format("json")
-        .option("inferSchema", "true")
-        .option("header", "true")
-        .json(get_users_file)
+    df_bronze_user = spark.read.format("delta").format("delta").load(get_users_file)
+
+    # read subscription data
+    df_bronze_subscription = spark.read.format("delta").load(get_subscription_file)
+
+    # read credit card data
+    df_bronze_credit_card = spark.read.format("delta").load(get_credit_card_file)
+
+    # read movies data
+    df_bronze_movies = spark.read.format("delta").load(get_movies_file)
+
+    select_columns_user = df_bronze_user.select(
+        "uid",
+        "user_id",
+        "first_name",
+        "last_name",
+        "address.country",
+        "employment.title",
+        "dt_current_timestamp",
     )
 
-    # read business data
-    df_business = (
-        spark.read.format("json")
-        .option("inferSchema", "true")
-        .option("header", "true")
-        .json(get_business_file)
-    )
-
-    # read review data
-    df_review = (
-        spark.read.format("json")
-        .option("inferSchema", "true")
-        .option("header", "true")
-        .json(get_reviews_file)
-    )
-
-    # get number of partitions
-    # [25], [16], [48]
-    print(df_user.rdd.getNumPartitions())
-    print(df_business.rdd.getNumPartitions())
-    print(df_review.rdd.getNumPartitions())
-
-    # print schema of dataframe
-    df_user.printSchema()
-    df_business.printSchema()
-    df_review.printSchema()
-
-    # display data
-    df_user.show()
-    df_business.show()
-    df_review.show()
-
-    # count rows
-    df_user.count()
-    df_business.count()
-    df_review.count()
-
-    # register df into sql engine
-    df_business.createOrReplaceTempView("business")
-    df_user.createOrReplaceTempView("user")
-    df_review.createOrReplaceTempView("review")
-
-    # sql join into a new [df]
-    df_join = spark.sql(
-        """
-        SELECT u.user_id,
-               u.name AS user,
-               u.average_stars AS user_avg_stars,
-               u.useful AS user_useful,
-               u.review_count AS user_review_count,
-               u.yelping_since,
-               b.business_id,
-               b.name AS business,
-               b.city,
-               b.state,
-               b.stars AS business_stars,
-               b.review_count AS business_review_count,
-               r.useful AS review_useful,
-               r.stars AS review_stars,
-               r.date AS date
-        FROM review AS r
-        INNER JOIN business AS b
-        ON r.business_id = b.business_id
-        INNER JOIN user AS u
-        ON u.user_id = r.user_id
-    """
-    )
-
-    # show & count df
-    df_join.explain()
-    df_join.count()
-
-    # show df
-    df_join.show()
-
-    # save dataframe into postgres
-    # yugabytedb database [ysql]
-    # k8s cluster ip for yugabytedb [intra-communication]
-    """
-    df_join \
-        .write \
-        .format("jdbc") \
-        .mode("overwrite") \
-        .option("url", "jdbc:postgresql://10.0.206.213:5433/owshq") \
-        .option("dbtable", "public.fact_reviews") \
-        .option("user", "yugabyte") \
-        .option("password", "yugabyte") \
-        .save()
-    """
-
-    # write into parquet file on curated zone
-    # file to be available for virtualization engine
-    # using minio as storage inside of [k8s]
-    df_join.write.format("parquet").mode("overwrite").save(
-        "s3a://curated-zone/fact_reviews/"
-    )
+    select_columns_user.show()
 
     # stop session
     spark.stop()
