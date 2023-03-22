@@ -124,14 +124,18 @@ if __name__ == "__main__":
     # file to be available for virtualization engine
     # using minio as storage inside of [k8s]
 
-    df_user.write.format("delta").mode("overwrite").save("s3a://bronze/users/")
+    df_user.write.format("delta").mode("overwrite").save(
+        "s3a://lakehouse/bronze/users/"
+    )
     df_subscription.write.format("delta").mode("overwrite").save(
-        "s3a://bronze/subscriptions/"
+        "s3a://lakehouse/bronze/subscriptions/"
     )
     df_credit_card.write.format("delta").mode("overwrite").save(
-        "s3a://bronze/credit_cards/"
+        "s3a://lakehouse/bronze/credit_cards/"
     )
-    df_movies.write.format("delta").mode("overwrite").save("s3a://bronze/movies/")
+    df_movies.write.format("delta").mode("overwrite").save(
+        "s3a://lakehouse/bronze/movies/"
+    )
 
     # stop session
     spark.stop()

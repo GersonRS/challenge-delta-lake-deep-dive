@@ -103,6 +103,8 @@ kubectl create namespace datastore
 kubectl create namespace deepstorage
 kubectl create namespace cicd
 kubectl create namespace app
+kubectl create namespace management
+kubectl create namespace misc
 
 helm repo add argo https://argoproj.github.io/argo-helm
 helm repo update
@@ -135,7 +137,7 @@ kubectl get services -n cicd -l app.kubernetes.io/name=argocd-server,app.kuberne
 # get password to log into argocd portal
 kubectl get secret argocd-initial-admin-secret -n cicd -o jsonpath="{.data.password}" | base64 -d
 ```
-
+L-gRo7IjUPdpp9k2
 Uma vez em posse destas informações, acesse a interface web do argo e adicione o seu repositorio no argo.
 
 Agora é hora de adicionar as outras ferramentas necesarias para o nosso pipeline de dados. Começando com os databases e storage do nosso pipeline de dados, execute os seguintes comandos:
@@ -180,10 +182,13 @@ kubectl apply -f manifests/orchestrator/crb-spark-operator-airflow-orchestrator.
 eval $(minikube docker-env)
 docker build --no-cache -f images/spark/dockerfile images/spark/ -t gersonrs/spark:0.1
 ```
+kubectl get secret minio-secrets -n deepstorage -o yaml | sed s/"namespace: deepstorage"/"namespace: processing"/| kubectl apply -n processing -f -
+kubectl apply -f dags/spark_jobs/transform_and_enrichment_from_bronze_to_silver.yaml -n processing
+kubectl logs -f transformation-and-enrichment-from-bronze-to-silver-driver -n processing
+kubectl delete sparkapplication transformation-and-enrichment-from-bronze-to-silver -n processing
 
-
-
-
+kubectl apply -f manifests/management/reflector.yaml
+https://github.com/EmberStack/kubernetes-reflector
 
 ## Estrutura de Arquivos
 

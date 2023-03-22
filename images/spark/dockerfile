@@ -1,29 +1,24 @@
 # docker image [gcp]
-FROM gcr.io/spark-operator/spark-py:v3.0.0
+FROM apache/spark-py:v3.3.2
 # Switch to user root so we can add additional jars and configuration files.
 USER root
 # create directory for apps
 RUN mkdir -p /app
-# Setup dependencies for Google Cloud Storage access.
-RUN rm $SPARK_HOME/jars/guava-14.0.1.jar
-ADD https://repo1.maven.org/maven2/com/google/guava/guava/23.0/guava-23.0.jar $SPARK_HOME/jars
-RUN chmod 644 $SPARK_HOME/jars/guava-23.0.jar
-# Add the connector jar needed to access Google Cloud Storage using the Hadoop FileSystem API.
-ADD https://storage.googleapis.com/hadoop-lib/gcs/gcs-connector-latest-hadoop2.jar $SPARK_HOME/jars
-RUN chmod 644 $SPARK_HOME/jars/gcs-connector-latest-hadoop2.jar
-ADD https://storage.googleapis.com/spark-lib/bigquery/spark-bigquery-latest_2.12.jar $SPARK_HOME/jars
-RUN chmod 644 $SPARK_HOME/jars/spark-bigquery-latest_2.12.jar
 # Setup for the Prometheus JMX exporter.
 # Add the Prometheus JMX exporter Java agent jar for exposing metrics sent to the JmxSink to Prometheus.
 ADD https://repo1.maven.org/maven2/io/prometheus/jmx/jmx_prometheus_javaagent/0.11.0/jmx_prometheus_javaagent-0.11.0.jar /prometheus/
 RUN chmod 644 /prometheus/jmx_prometheus_javaagent-0.11.0.jar
 # add jar files
-ADD https://repo1.maven.org/maven2/io/delta/delta-core_2.12/0.7.0/delta-core_2.12-0.7.0.jar $SPARK_HOME/jars/delta-core_2.12-0.7.0.jar
-RUN chmod 644 $SPARK_HOME/jars/delta-core_2.12-0.7.0.jar
-ADD https://repo1.maven.org/maven2/com/amazonaws/aws-java-sdk/1.7.4/aws-java-sdk-1.7.4.jar $SPARK_HOME/jars/aws-java-sdk-1.7.4.jar
-RUN chmod 644 $SPARK_HOME/jars/aws-java-sdk-1.7.4.jar
-ADD https://repo1.maven.org/maven2/org/apache/hadoop/hadoop-aws/2.7.3/hadoop-aws-2.7.3.jar $SPARK_HOME/jars/hadoop-aws-2.7.3.jar
-RUN chmod 644 $SPARK_HOME/jars/hadoop-aws-2.7.3.jar
+ADD https://repo1.maven.org/maven2/io/delta/delta-core_2.12/2.2.0/delta-core_2.12-2.2.0.jar $SPARK_HOME/jars/delta-core_2.12-2.2.0.jar
+RUN chmod 644 $SPARK_HOME/jars/delta-core_2.12-2.2.0.jar
+ADD https://repo1.maven.org/maven2/io/delta/delta-storage/2.2.0/delta-storage-2.2.0.jar $SPARK_HOME/jars/delta-storage-2.2.0.jar
+RUN chmod 644 $SPARK_HOME/jars/delta-storage-2.2.0.jar
+ADD https://repo1.maven.org/maven2/com/amazonaws/aws-java-sdk-bundle/1.12.431/aws-java-sdk-bundle-1.12.431.jar $SPARK_HOME/jars/aws-java-sdk-bundle-1.12.431.jar
+RUN chmod 644 $SPARK_HOME/jars/aws-java-sdk-bundle-1.12.431.jar
+ADD https://repo1.maven.org/maven2/org/apache/hadoop/hadoop-common/3.3.4/hadoop-common-3.3.4.jar $SPARK_HOME/jars/hadoop-common-3.3.4.jar
+RUN chmod 644 $SPARK_HOME/jars/hadoop-common-3.3.4.jar
+ADD https://repo1.maven.org/maven2/org/apache/hadoop/hadoop-aws/3.3.4/hadoop-aws-3.3.4.jar $SPARK_HOME/jars/hadoop-aws-3.3.4.jar
+RUN chmod 644 $SPARK_HOME/jars/hadoop-aws-3.3.4.jar
 # copy spark program
 COPY ingestion_to_bronze.py bronze_to_silver.py silver_to_gold.py /app/
 COPY landing/ /app/landing/
@@ -36,6 +31,4 @@ RUN mkdir -p /etc/metrics/conf
 COPY conf/metrics.properties /etc/metrics/conf
 COPY conf/prometheus.yaml /etc/metrics/conf
 
-RUN pip install pathlib
-
-ENTRYPOINT ["/opt/entrypoint.sh"]
+RUN pip install pathlib delta-spark
