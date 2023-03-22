@@ -36,4 +36,6 @@ RUN mkdir -p /etc/metrics/conf
 COPY conf/metrics.properties /etc/metrics/conf
 COPY conf/prometheus.yaml /etc/metrics/conf
 
+RUN pip install pathlib
+
 ENTRYPOINT ["/opt/entrypoint.sh"]

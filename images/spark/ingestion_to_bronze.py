@@ -12,8 +12,8 @@ from pyspark.sql.functions import current_timestamp, lit
 def get_path_size(base_path):
     PATH_MODELS = Path(base_path).parent
     total_size = 0
-    for entry in os.listdir(PATH_MODELS):
-        file_stats = os.stat(Path(PATH_MODELS, entry))
+    for entry in os.listdir(str(PATH_MODELS)):
+        file_stats = os.stat(str(Path(PATH_MODELS, entry)))
         total_size += file_stats.st_size
     return total_size
 
