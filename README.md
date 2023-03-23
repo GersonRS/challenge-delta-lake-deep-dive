@@ -183,10 +183,10 @@ eval $(minikube docker-env)
 docker build --no-cache -f images/spark/dockerfile images/spark/ -t gersonrs/spark:0.1
 ```
 kubectl get secret minio-secrets -n deepstorage -o yaml | sed s/"namespace: deepstorage"/"namespace: processing"/| kubectl apply -n processing -f -
-kubectl apply -f dags/spark_jobs/transform_and_enrichment_from_bronze_to_silver.yaml -n processing
-kubectl logs -f transformation-and-enrichment-from-bronze-to-silver-driver -n processing
-kubectl delete sparkapplication transformation-and-enrichment-from-bronze-to-silver -n processing
-
+kubectl apply -f dags/spark_jobs/delivery_data_from_silver_to_gold.yaml -n processing
+kubectl logs -f delivery-data-from-silver-to-gold-driver -n processing
+kubectl delete sparkapplication delivery-data-from-silver-to-gold -n processing
+https://docs.delta.io/latest/releases.html
 kubectl apply -f manifests/management/reflector.yaml
 https://github.com/EmberStack/kubernetes-reflector
 

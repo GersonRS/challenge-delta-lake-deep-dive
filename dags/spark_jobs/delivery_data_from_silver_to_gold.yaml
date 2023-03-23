@@ -1,14 +1,14 @@
 apiVersion: "sparkoperator.k8s.io/v1beta2"
 kind: SparkApplication
 metadata:
-  name: transformation-and-enrichment-from-bronze-to-silver
+  name: delivery-data-from-silver-to-gold
   namespace: processing
 spec:
   type: Python
   mode: cluster
   image: "gersonrs/spark:0.1"
   imagePullPolicy: IfNotPresent
-  mainApplicationFile: "local:///app/bronze_to_silver.py"
+  mainApplicationFile: "local:///app/silver_to_gold.py"
   sparkVersion: "3.3.2"
   restartPolicy:
     type: OnFailure

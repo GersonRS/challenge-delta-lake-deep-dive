@@ -20,7 +20,6 @@ RUN chmod 644 $SPARK_HOME/jars/hadoop-common-3.3.4.jar
 ADD https://repo1.maven.org/maven2/org/apache/hadoop/hadoop-aws/3.3.4/hadoop-aws-3.3.4.jar $SPARK_HOME/jars/hadoop-aws-3.3.4.jar
 RUN chmod 644 $SPARK_HOME/jars/hadoop-aws-3.3.4.jar
 # copy spark program
-COPY ingestion_to_bronze.py bronze_to_silver.py silver_to_gold.py /app/
 COPY landing/ /app/landing/
 # set work directory
 WORKDIR /app
@@ -32,3 +31,5 @@ COPY conf/metrics.properties /etc/metrics/conf
 COPY conf/prometheus.yaml /etc/metrics/conf
 
 RUN pip install pathlib delta-spark
+
+COPY ingestion_to_bronze.py bronze_to_silver.py silver_to_gold.py /app/

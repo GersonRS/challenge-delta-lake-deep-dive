@@ -108,8 +108,8 @@ if __name__ == "__main__":
     enhance_column_selection_movies = df_bronze_movies.select(
         col("user_id").alias("movies_user_id"),
         col("adult").alias("movies_adult"),
-        encode(col("title"), "UTF-8").alias("movies_title"),
-        col("popularity").alias("movies_popularity"),
+        col("title").alias("movies_title"),
+        col("popularity").cast("double").alias("movies_popularity"),
         col("vote_average").alias("movies_vote_average"),
         col("vote_count").alias("movies_vote_count"),
         split(col("release_date"), "-")[0].alias("movies_release_date"),

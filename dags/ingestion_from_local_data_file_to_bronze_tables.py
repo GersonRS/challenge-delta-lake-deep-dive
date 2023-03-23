@@ -65,7 +65,7 @@ dag = DAG(
     "ingestion-from-local-data-file-to-bronze-tables",
     default_args=default_args,
     schedule_interval="@once",
-    tags=["spark", "kubernetes", "s3", "sensor", "minio"],
+    tags=["spark", "kubernetes", "s3", "sensor", "minio", "bronze"],
 )
 # [END instantiate_dag]
 

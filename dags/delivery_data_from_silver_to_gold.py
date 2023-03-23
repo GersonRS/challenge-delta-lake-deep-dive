@@ -62,10 +62,10 @@ default_args = {
 # [START instantiate_dag]
 
 dag = DAG(
-    "transformation-and-enrichment-from-bronze-to-silver",
+    "delivery-data-from-silver-to-gold",
     default_args=default_args,
     schedule_interval="@once",
-    tags=["spark", "kubernetes", "s3", "sensor", "minio", "bronze", "silver"],
+    tags=["spark", "kubernetes", "s3", "sensor", "minio", "silver", "gold"],
 )
 # [END instantiate_dag]
 
@@ -74,9 +74,9 @@ dag = DAG(
 # containerized spark application
 # yaml definition to trigger process
 submit = SparkKubernetesOperator(
-    task_id="task_spark_transform_and_enrichment_from_bronze_to_silver",
+    task_id="task_spark_delivery_data_from_silver_to_gold",
     namespace="processing",
-    application_file="spark_jobs/transform_and_enrichment_from_bronze_to_silver.yaml",
+    application_file="spark_jobs/delivery_data_from_silver_to_gold.yaml",
     kubernetes_conn_id="kubernetes_default",
     do_xcom_push=True,
     dag=dag,
@@ -86,9 +86,9 @@ submit = SparkKubernetesOperator(
 # using sensor to determine the outcome of the task
 # read from xcom tp check the status [key & value] pair
 sensor = SparkKubernetesSensor(
-    task_id="task_spark_task_spark_transform_and_enrichment_from_bronze_to_silver_monitor",
+    task_id="task_spark_task_spark_delivery_data_from_silver_to_gold_monitor",
     namespace="processing",
-    application_name="{{task_instance.xcom_pull(task_ids='task_spark_transform_and_enrichment_from_bronze_to_silver')['metadata']['name']}}",
+    application_name="{{task_instance.xcom_pull(task_ids='task_spark_delivery_data_from_silver_to_gold')['metadata']['name']}}",
     kubernetes_conn_id="kubernetes_default",
     dag=dag,
     attach_log=True,
