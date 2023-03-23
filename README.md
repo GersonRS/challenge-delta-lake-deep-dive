@@ -29,14 +29,14 @@
 
 - [Tabela de Conteúdo](#tabela-de-conte%C3%BAdo)
 - [Sobre o Projeto](#sobre-o-projeto)
-  - [Feito Com](#feito-com)
+- [Feito Com](#feito-com)
+- [Fluxo de versionamento](#fluxo-de-versionamento)
 - [Começando](#come%C3%A7ando)
   - [Pré-requisitos](#pr%C3%A9-requisitos)
+  - [instalação do cluster](#instala%C3%A7%C3%A3o-do-cluster)
+  - [instalação das ferramentas](#instala%C3%A7%C3%A3o-das-ferramentas)
   - [Estrutura de Arquivos](#estrutura-de-arquivos)
-  - [Instalação](#instala%C3%A7%C3%A3o)
-    - [Passo Adicional no Android](#passo-adicional-no-android)
   - [Edição](#edi%C3%A7%C3%A3o)
-  - [Publicação](#publica%C3%A7%C3%A3o)
 - [Contribuição](#contribui%C3%A7%C3%A3o)
 - [Licença](#licen%C3%A7a)
 - [Contato](#contato)
@@ -74,25 +74,32 @@ Para conseguir utilizar o projeto, seja através de um ambiente em cloud ou um c
 
 Antes de seguirmos para as configurações e uso da solução do desafio, é ideal que você tenha o ambiente configurado para criar, testar e executar o projeto, para isso você pode seguir o guia abaixo:
 
-### instalação e configuração de um ambiente local
+### instalação do cluster
 
-Primeiramente precisamos montar um ambiente com um cluster kubernetes para que possamos executar nossa aplicação e execução do pipeline de dados.
+Primeiramente precisamos montar um ambiente com um cluster kubernetes local para que possamos executar nossa aplicação e execução do pipeline de dados.
 
 Para esta POC usaremos o cluster de kubernetes **[minikube](https://minikube.sigs.k8s.io/docs/)**. Para instalar o minikube basta seguir [este guia de instalação](https://minikube.sigs.k8s.io/docs/start/).
 
 Também usaremos o **[helm](https://helm.sh/)** para nos auxiliar na instalação de algumas aplicações. Para instalar o helm [siga este guia](https://helm.sh/docs/intro/install/).
 
 Após estes dois pre-requisitos instalados é hora de iniciar o nosso cluster minikube:
+> para que ocorra tudo bem é aconselhavel usar um cluster de no minimo 8Gb e 2 CPUs
 ```
 minikube start --memory=8000 --cpus=2
 ```
-> para que ocorra tudo bem é aconselhavel usar um cluster de no minimo 8Gb e 2 CPUs
 
-### Instalação do ferramental
+> Para que alguns serviços sejam acessiveis via loadbalancer no minikube, é necessario que você use o [tunelamento do minikube](https://minikube.sigs.k8s.io/docs/handbook/accessing/#example-of-loadbalancer).
+> Para isto abra uma nova aba do seu terminal e digite o seguinte commando:
+>
+>`minikube tunnel`
+>
+> Com isto o seu ambiente esta pronto para receber acessos via loadbalancer
+
+### Instalação das ferramentas
 
 Depois do ambiente inicializado será necessario instalar algumas aplicações que serão responsaveis por manter e gerenciar nosso pipeline de dados.
 
-Estando conectado em um cluster Kubernetes, execute os seguintes comandos:
+Estando conectado em um cluster Kubernetes, execute os seguintes comandos para criar todos os namespaces necessarios:
 
 ```sh
 kubectl create namespace orchestrator
@@ -105,58 +112,72 @@ kubectl create namespace cicd
 kubectl create namespace app
 kubectl create namespace management
 kubectl create namespace misc
+```
 
+Instale o argocd que será responsavel por manter nossas aplicações:
+```sh
 helm repo add argo https://argoproj.github.io/argo-helm
 helm repo update
 helm install argocd argo/argo-cd --namespace cicd --version 5.27.1
 ```
 
-> Para que alguns serviços sejam acessiveis via loadbalancer no minikube, é necessario que você use o [tunelamento do minikube](https://minikube.sigs.k8s.io/docs/handbook/accessing/#example-of-loadbalancer).
-> Para isto abra uma nova aba do seu terminal e digite o seguinte commando:
->
->`minikube tunnel`
->
-> Com isto o seu ambiente esta pronto para receber acessos via loadbalancer
-
-Uma vez habilitado o LoadBalancer, altere service do argo para loadbalancer:
+Altere o service do argo para loadbalancer:
 ```sh
 # create a load balancer
 kubectl patch svc argocd-server -n cicd -p '{"spec": {"type": "LoadBalancer"}}'
 ```
 
-Em seguida mude para o namespace da instalação do argo:
-
+Em seguida instale o argo cli para fazer a configuração do repositorio:
 ```sh
-kubens cicd
+sudo curl -sSL -o /usr/local/bin/argocd https://github.com/argoproj/argo-cd/releases/latest/download/argocd-linux-amd64
+sudo chmod +x /usr/local/bin/argocd
 ```
-Depois veja o ip atribiudo para acessar o argo e o seu respectivo password:
+Em seguida armazene o ip atribiudo para acessar o argo e faça o login no argo, com os seguintes comandos:
 ```sh
-# retrieve load balancer ip
-kubectl get services -n cicd -l app.kubernetes.io/name=argocd-server,app.kubernetes.io/instance=argocd -o jsonpath="{.items[0].status.loadBalancer.ingress[0].ip}"
+ARGOCD_LB=$(kubectl get services -n cicd -l app.kubernetes.io/name=argocd-server,app.kubernetes.io/instance=argocd -o jsonpath="{.items[0].status.loadBalancer.ingress[0].ip}")
 
 # get password to log into argocd portal
-kubectl get secret argocd-initial-admin-secret -n cicd -o jsonpath="{.data.password}" | base64 -d
+# argocd login 192.168.0.200 --username admin --password UbV0FdJ2ZNCD8kxU --insecure
+kubectl get secret argocd-initial-admin-secret -n cicd -o jsonpath="{.data.password}" | base64 -d | xargs -t -I {} argocd login $ARGOCD_LB --username admin --password {} --insecure
 ```
-L-gRo7IjUPdpp9k2
-Uma vez em posse destas informações, acesse a interface web do argo e adicione o seu repositorio no argo.
+> caso queira ver o password do argo para acessar a interface web execute este comando: `kubectl get secret argocd-initial-admin-secret -n cicd -o jsonpath="{.data.password}" | base64 -d`
 
-Agora é hora de adicionar as outras ferramentas necesarias para o nosso pipeline de dados. Começando com os databases e storage do nosso pipeline de dados, execute os seguintes comandos:
+Uma vez feita a autenticação não é necessario adicionar um cluster, pois o argo esta configurado para usar o cluster em que ele esta instalado, ou seja, o cluster local ja esta adicionado como **`--in-cluster`**, bastando apenas adicionar o seu repositorio com o seguinte comando:
 
-> Antes de executar os comando você pode alterar os secrets dos arquivos localizados na pasta `secrets/` , caso queira mudar os passwords de acessos aos databases e storage
+```sh
+argocd repo add git@github.com:GersonRS/big-data-on-k8s.git --ssh-private-key-path ~/.ssh/id_ed25519 --insecure-skip-server-verification
+```
+
+> Lembrando que para este comando funcionar é necessario que você tenha uma `chave ssh` configurada para se conectar com o github no seu computador. Caso não tenha, use [este guia](https://docs.github.com/pt/authentication/connecting-to-github-with-ssh/generating-a-new-ssh-key-and-adding-it-to-the-ssh-agent) para criar uma e [adiciona-la ao github](https://docs.github.com/pt/authentication/connecting-to-github-with-ssh/adding-a-new-ssh-key-to-your-github-account).
+
+Agora é hora de adicionar as outras ferramentas necesarias para o nosso pipeline de dados. E para isto precisamos criar `secrets` para armazenar senhas e informações censiveis, que  sejam acessiveis pelas aplicações e processos do **`Spark`**, por isso é necessario que eles estejam no namespace onde esta rodando a aplicação e também no namespace processing, onde será executado os processos do `spark`. Então para isto podemos usar o **[Reflactor](https://github.com/EmberStack/kubernetes-reflector)**, que faz a replicação dos secrets nos namespaces que precisamos e não há a necessidade de re-criar os secrets em namespaces diferentes, e para isto execute este comando:
+
+```sh
+kubectl apply -f manifests/management/reflector.yaml
+```
+
+> Antes de executar os comando você pode alterar os secrets dos arquivos localizados na pasta `secrets/`, caso queira mudar os passwords de acessos aos databases e storage
+
+Após o reflator esta em funcionamento, execute o comando que cria os secrets nos namespaces necessarios: 
 
 ```sh
 # secrets
-kubectl apply -f secrets/postgres-secrets.yaml
-kubectl apply -f secrets/minio-secrets.yaml
+kubectl apply -f manifests/misc/minio-postegres-spark-secrets.yaml
+```
+
+> Caso não queira instalar o Reflactor para automatizar o processo de criar o secret em varios namespaces diferentes, você pode faze manualmente a replicação do secret para outro namespace executando este comando: 
+`kubectl get secret minio-secrets -n deepstorage -o yaml | sed s/"namespace: deepstorage"/"namespace: processing"/| kubectl apply -n processing -f -`
+
+Uma vez que, os secrets estejam configurados podemos começar instalando os databases e storage do nosso pipeline de dados com o seguinte comando:
+
+```sh
 # databases
 kubectl apply -f manifests/database/postgres.yaml
 # deep storage
 kubectl apply -f manifests/deepstorage/minio.yaml
 ```
 
-E por fim instale o Spark e o Airflow, executando os seguintes comandos:
-
-> Antes de instalar o airflow lembre-se de alterar o **`gitSshKey`** na linha `47` do arquivo `manifests/orchestrator/airflow.yaml` para a chave privada do seu ssh conectado com o github
+E por fim instale o Spark e o Airflow, juntamente com suas permições para executar os processos spark, executando os seguintes comandos:
 
 ```sh
 # add & update helm list repos
@@ -168,34 +189,67 @@ helm repo update
 ```sh
 # processing
 kubectl apply -f manifests/processing/spark.yaml
-kubectl apply -f manifests/processing/crb-spark-operator-airflow-processing.yaml
 ```
+
+Antes de instalar o airflow é preciso atender 2 requisitos. O primeiro é criar uma imagem do airflow com algumas libs inclusas, para isto execute o seguinte comando:
+```sh 
+eval $(minikube docker-env)
+docker build -f images/airflow/dockerfile images/airflow/ -t airflow:0.1
+```
+
+O segundo é crie um secret contendo a sua `chave ssh` para o airflow baixar as `DAGs` necessarias atraves do gitSync, com o seguinte comando:
+
+> Lembrando que para isto você deve ter a `chave ssh` configurada em sua maquina.
+
+```sh
+kubectl create secret generic airflow-ssh-secret --from-file=gitSshKey=$HOME/.ssh/id_ed25519 -n orchestrator
+```
+
+Apos atender os requisitos, instale o airflow com o seguinte comando:
+
 ```sh
 # orchestrator
 kubectl apply -f manifests/orchestrator/airflow.yaml
-kubectl apply -f manifests/orchestrator/crb-spark-operator-airflow-orchestrator.yaml
 ```
 
+Em seguida instale as configurações de acesso:
+
+```sh
+# orchestrator
+kubectl apply -f manifests/misc/airflow-and-spark-cluster-role-bindings.yaml
+```
 
 
 ```sh
 eval $(minikube docker-env)
-docker build --no-cache -f images/spark/dockerfile images/spark/ -t gersonrs/spark:0.1
+docker build --no-cache -f images/spark/dockerfile images/spark/ -t spark:0.1
 ```
-kubectl get secret minio-secrets -n deepstorage -o yaml | sed s/"namespace: deepstorage"/"namespace: processing"/| kubectl apply -n processing -f -
+
 kubectl apply -f dags/spark_jobs/delivery_data_from_silver_to_gold.yaml -n processing
 kubectl logs -f delivery-data-from-silver-to-gold-driver -n processing
 kubectl delete sparkapplication delivery-data-from-silver-to-gold -n processing
 https://docs.delta.io/latest/releases.html
-kubectl apply -f manifests/management/reflector.yaml
-https://github.com/EmberStack/kubernetes-reflector
+
 
 ## Estrutura de Arquivos
 
-A estrutura de arquivos está da seguinte maneira:
+A estrutura de pastas está da seguinte maneira:
 
 ```bash
-
+├── dags
+├── images
+│   ├── airflow
+│   └── spark
+├── manifests
+│   ├── database
+│   ├── deepstorage
+│   ├── management
+│   ├── misc
+│   ├── monitoring
+│   ├── orchestrator
+│   └── processing
+└── secrets
+# 34 directories, 324 files
 ```
 
 Serão explicados os arquivos e diretórios na seção de [Edição](#edição).
