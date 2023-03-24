@@ -78,7 +78,6 @@ list_keys = S3ListOperator(
     task_id="list_keys",
     bucket="lakehouse",
     prefix="bronze/",
-    delimiter='/',
     aws_conn_id='minio',
     do_xcom_push=True,
     dag=dag
