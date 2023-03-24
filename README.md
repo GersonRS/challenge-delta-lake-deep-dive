@@ -61,9 +61,8 @@ Projeto segue regras de versionamento [gitflow](https://www.atlassian.com/br/git
 Abaixo segue o que foi utilizado na criação deste projeto:
 
 - [ArgoCD](https://argo-cd.readthedocs.io/en/stable/) - Argo CD, é uma ferramenta declarativa que usa a abordagem GitOps para implantar aplicações no Kubernetes, ele pode ser usado para gerenciar várias aplicações em diferentes clusters Kubernetes a partir de um único ponto. Ele pode se conectar a repositórios git públicos e privados, é gratuito, tem o código fonte aberto, é um projeto incubado pela CNCF, possui uma interface web de visualização e gerenciamento dos recursos, mas também pode ser configurado via linha de comando;
-- [Redux](https://redux.js.org/) - O Redux é um contêiner de estado previsível para aplicativos JavaScript. Ele ajuda você a escrever aplicativos que se comportam consistentemente, executados em diferentes ambientes (cliente, servidor e nativo) e são fáceis de testar;
-  - [Redux Saga](https://redux-saga.js.org/) - O redux-saga é uma biblioteca que tem como objetivo tornar os efeitos colaterais dos aplicativos mais fáceis de gerenciar, mais eficientes de executar, fáceis de testar e melhores em lidar com falhas;
-- [React Navigation](https://reactnavigation.org/) - O React Navigation surgiu da necessidade comunidade do React Native de uma navegação de forma fácil de se usar, e escrita toda em JavaScript;
+
+to do o resto
 
 <!-- GETTING STARTED -->
 
