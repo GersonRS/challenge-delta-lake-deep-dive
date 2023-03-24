@@ -77,8 +77,10 @@ dag = DAG(
 list_keys = S3ListOperator(
     task_id="list_keys",
     bucket="lakehouse",
-    prefix="bronze",
-    aws_conn_id="minio",
+    prefix="bronze/",
+    delimiter='/',
+    aws_conn_id='minio',
+    do_xcom_push=True,
     dag=dag
 )
 # [END set_tasks]
