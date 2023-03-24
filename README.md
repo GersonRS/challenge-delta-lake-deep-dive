@@ -519,9 +519,7 @@ Nesta seção haverão instruções caso você queira editar o projeto, explican
 
   - **[database](/manifests/database/)** - Diretório para guardar os arquivos de configuração das aplicações de database, por exemplo, a configuração de instalação da aplicação `[postgres](/manifests/database/postgres.yaml)`;
 
-    - **ReactotronConfig.js** - Arquivo contendo a configuração do Reactotron, com os Plugins `reactotron-redux` e `reactotron-redux-saga`, para ser usado na aplicação;
-
-- **.editorconfig** - Arquivo destinado à configuração do plugin Editor Config, que padroniza algumas configurações para o editor em diferentes ambientes;
+to do o resto
 
 <!-- CONTRIBUTING -->
 
