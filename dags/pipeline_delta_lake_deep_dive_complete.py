@@ -31,7 +31,8 @@ from datetime import timedelta
 # [START import_module]
 # The DAG object; we'll need this to instantiate a DAG
 from airflow import DAG
-from airflow.providers.amazon.aws.sensors.s3_key import S3KeySensor
+from airflow.providers.amazon.aws.operators.s3 import S3ListOperator
+from airflow.providers.amazon.aws.sensors.s3 import S3KeySensor, S3KeysUnchangedSensor
 
 # Operators; we need this to operate!
 from airflow.providers.cncf.kubernetes.operators.spark_kubernetes import (
@@ -73,17 +74,12 @@ dag = DAG(
 # [START set_tasks]
 # verify if new data has arrived on processing bucket
 # connecting to minio to check (sensor)
-sensor = S3KeySensor(
-    task_id="verify_file_existence_processing",
-    bucket_name="lakehouse",
-    bucket_key="bronze",
-    wildcard_match=True,
-    timeout=18 * 60 * 60,
-    poke_interval=120,
-    aws_conn_id="minio",
-    dag=dag,
+list_keys = S3ListOperator(
+    task_id="list_keys",
+    bucket="lakehouse",
+    prefix="bronze",
 )
 # [END set_tasks]
 # [START task_sequence]
-sensor
+list_keys
 # [END task_sequence]
