@@ -73,9 +73,6 @@ if __name__ == "__main__":
         delta_gold_tb_subers_location
     )
 
-    get_gold_subscribers.printSchema()
-    get_gold_subscribers.show(truncate=True)
-
     get_voters = "s3a://lakehouse/silver/voters"
     df_silver_voters = DeltaTable.forPath(spark, get_voters)
 
@@ -120,12 +117,13 @@ if __name__ == "__main__":
         .location(delta_gold_tb_voters_location)
         .execute()
     )
-    get_gold_voters.printSchema()
-    get_gold_voters.show(truncate=True)
+
     get_gold_voters.write.format("delta").mode("overwrite").save(
         delta_gold_tb_voters_location
     )
 
+    get_gold_subscribers.printSchema()
+    get_gold_voters.printSchema()
     # test save dataframe into postgres
     # yugabytedb database [ysql]
     # k8s cluster ip for yugabytedb [intra-communication]

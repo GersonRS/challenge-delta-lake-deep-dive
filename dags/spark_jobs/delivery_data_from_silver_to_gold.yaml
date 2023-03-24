@@ -6,7 +6,7 @@ metadata:
 spec:
   type: Python
   mode: cluster
-  image: "gersonrs/spark:0.1"
+  image: "spark:0.1"
   imagePullPolicy: IfNotPresent
   mainApplicationFile: "local:///app/silver_to_gold.py"
   sparkVersion: "3.3.2"

@@ -31,6 +31,7 @@ from datetime import timedelta
 # [START import_module]
 # The DAG object; we'll need this to instantiate a DAG
 from airflow import DAG
+from airflow.operators.dummy_operator import DummyOperator
 from airflow.providers.amazon.aws.operators.s3 import S3ListOperator
 from airflow.providers.amazon.aws.sensors.s3 import S3KeySensor, S3KeysUnchangedSensor
 
@@ -72,17 +73,89 @@ dag = DAG(
 # [END instantiate_dag]
 
 # [START set_tasks]
+
+start = DummyOperator(task_id='start', dag=dag)
+
 # verify if new data has arrived on processing bucket
 # connecting to minio to check (sensor)
 list_keys = S3ListOperator(
     task_id="list_keys",
-    bucket="lakehouse",
-    prefix="bronze/",
-    aws_conn_id='minio',
+    bucket="landing",
+    prefix="/",
+    aws_conn_id="minio",
     do_xcom_push=True,
-    dag=dag
+    dag=dag,
 )
+
+ingestion = SparkKubernetesOperator(
+    task_id="task_spark_ingestion_file_local_to_bronze_table",
+    namespace="processing",
+    application_file="spark_jobs/ingestion_from_local_data_file_to_bronze_tables.yaml",
+    kubernetes_conn_id="kubernetes_default",
+    do_xcom_push=True,
+    dag=dag,
+)
+
+ingestion_sensor = SparkKubernetesSensor(
+    task_id="task_spark_ingestion_file_local_to_bronze_table_monitor",
+    namespace="processing",
+    application_name="{{task_instance.xcom_pull(task_ids='task_spark_ingestion_file_local_to_bronze_table')['metadata']['name']}}",
+    kubernetes_conn_id="kubernetes_default",
+    dag=dag,
+    attach_log=True,
+)
+
+maybe_great_expectation = DummyOperator(task_id='maybe_great_expectation', dag=dag)
+
+tranform = SparkKubernetesOperator(
+    task_id="task_spark_transform_and_enrichment_from_bronze_to_silver",
+    namespace="processing",
+    application_file="spark_jobs/transform_and_enrichment_from_bronze_to_silver.yaml",
+    kubernetes_conn_id="kubernetes_default",
+    do_xcom_push=True,
+    dag=dag,
+)
+
+transform_sensor = SparkKubernetesSensor(
+    task_id="task_spark_task_spark_transform_and_enrichment_from_bronze_to_silver_monitor",
+    namespace="processing",
+    application_name="{{task_instance.xcom_pull(task_ids='task_spark_transform_and_enrichment_from_bronze_to_silver')['metadata']['name']}}",
+    kubernetes_conn_id="kubernetes_default",
+    dag=dag,
+    attach_log=True,
+)
+
+delivery = SparkKubernetesOperator(
+    task_id="task_spark_delivery_data_from_silver_to_gold",
+    namespace="processing",
+    application_file="spark_jobs/delivery_data_from_silver_to_gold.yaml",
+    kubernetes_conn_id="kubernetes_default",
+    do_xcom_push=True,
+    dag=dag,
+)
+
+delivery_sensor = SparkKubernetesSensor(
+    task_id="task_spark_task_spark_delivery_data_from_silver_to_gold_monitor",
+    namespace="processing",
+    application_name="{{task_instance.xcom_pull(task_ids='task_spark_delivery_data_from_silver_to_gold')['metadata']['name']}}",
+    kubernetes_conn_id="kubernetes_default",
+    dag=dag,
+    attach_log=True,
+)
+
+end = DummyOperator(task_id='end', dag=dag)
 # [END set_tasks]
 # [START task_sequence]
-list_keys
+(
+    start
+    >> list_keys
+    >> ingestion
+    >> ingestion_sensor
+    >> maybe_great_expectation
+    >> tranform
+    >> transform_sensor
+    >> delivery
+    >> delivery_sensor
+    >> end
+)
 # [END task_sequence]

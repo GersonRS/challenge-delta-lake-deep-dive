@@ -192,21 +192,17 @@ helm repo update
 kubectl apply -f manifests/processing/spark.yaml
 ```
 
-Antes de instalar o airflow é preciso atender 2 requisitos. O primeiro é criar uma imagem do airflow com algumas libs inclusas, para isto execute o seguinte comando:
-```sh 
-eval $(minikube docker-env)
-docker build -f images/airflow/dockerfile images/airflow/ -t airflow:0.1
-```
-
-O segundo é crie um secret contendo a sua `chave ssh` para o airflow baixar as `DAGs` necessarias atraves do gitSync, com o seguinte comando:
+Antes de instalar o airflow é preciso atender um certo requisito, que é criar um secret contendo a sua `chave ssh` para o airflow baixar as `DAGs` necessarias atraves do gitSync. é possivel criar com o seguinte comando:
 
 > Lembrando que para isto você deve ter a `chave ssh` configurada em sua maquina.
 
 ```sh
 kubectl create secret generic airflow-ssh-secret --from-file=gitSshKey=$HOME/.ssh/id_ed25519 -n orchestrator
 ```
-
-Apos atender os requisitos, instale o airflow com o seguinte comando:
+<!-- ```sh 
+eval $(minikube docker-env)
+docker build -f images/airflow/dockerfile images/airflow/ -t airflow:0.1
+``` -->
 
 ```sh
 # orchestrator
@@ -230,6 +226,7 @@ Antes de tudo é preciso ter uma `imagem spark` que contenha todos os jars neces
 eval $(minikube docker-env)
 docker build --no-cache -f images/spark/dockerfile images/spark/ -t spark:0.1
 ```
+Neste projeto esta sendo usada a versão 3.3.2 do spark e 2.2.0 do delta, juntamente com todas as suas libs e jars nas versões compativeis seguindo as compatibilidades do delta [neste link](https://docs.delta.io/latest/releases.html) e neste link.
 
 Apos a image spark esta criada abra a UI web do airflow. Caso não saiba qual foi o ip atribuido ao webserver do airflow execute o comando a seguir para descobrir se ip:
 ```sh
@@ -241,6 +238,13 @@ Uma vez que esteja na UI do airflow ative o pipeline de dados `pipeline-delta-la
   * `transformation-and-enrichment-from-bronze-to-silver`
   * `delivery-data-from-silver-to-gold`
 
+caso não deseje executar o pipeline pelo airflow, você pode executar o pipeline de dados executando os seguintes comandos em sequencia:
+```sh
+kubectl apply -f dags/spark_jobs/ingestion_from_local_data_file_to_bronze_tables.yaml -n processing
+kubectl apply -f dags/spark_jobs/transform_and_enrichment_from_bronze_to_silver.yaml -n processing
+kubectl apply -f dags/spark_jobs/delivery_data_from_silver_to_gold.yaml -n processing
+```
+
 Para verificar os arquivos no `data lakehouse` acesse a UI do `minio` e use as credenciais de acesso encontradas no aquivo *[minio-secrets.yaml](/secrets/minio-secrets.yaml)* na pasta *[secrets](/secrets/)*. Caso não saiba o ip atribuido ao minio execute:
 ```sh
 kubectl get services -n deepstorage -l app.kubernetes.io/name=minio -o jsonpath="{.items[0].status.loadBalancer.ingress[0].ip}"
@@ -250,15 +254,239 @@ Caso queira pegar as credenciais de acesso do `minio`, execute:
 echo "user: $(kubectl get secret minio-secrets -n deepstorage -o jsonpath="{.data.root-user}" | base64 -d)"
 echo "password: $(kubectl get secret minio-secrets -n deepstorage -o jsonpath="{.data.root-password}" | base64 -d)"
 ```
+
+## Pipeline Spark
+
+Para este desafio foi escolhida 4 conjunto de dados **(`user`, `subscription`, `credit_card` e `movies`)**.
+Os codigos spark foram escritos em `python` ***(Pyspark)*** e adicionados a uma [imagem docker](images/spark/dockerfile). Optei colocar todos os meus códigos spark na mesma `imagem`, pela simplicidade de desenvolver e explicar. Apesar de que este pode não ser a melhor pratica para esse tipo de problema(mas funciona).
+
+Os dados da **`landing`** disponibilizados pelo desafio, também foram incluidos na `imagem`, os quais são transformados em **tabelas `delta`** em um `lakehouse` criado no `minio`. Sei que esta não foi a melhor pratica, mas esta também foi uma escolha pela simplicidade de replicação do projeto *(e minha falta de tempo de colocar no bucket)*.
+
+### Carregando os dados na **`Bronze`**
+
+[A primaira etapa do pipeline](/images/spark/ingestion_to_bronze.py), consiste em pegar os dados da `landing` (que estão na [imagem](/images/spark/dockerfile)) e transforma-los em `tabelas` **`delta`** em um **`lakehouse`**. Além disso são adicionados informações para analises posteriores como por exemplo: `ingestion_time`, `file_size` e dentre outros. É possivel ver todos as informações adicionais nas linhas `56-63` do arquivo [ingestion_to_bronze.py](/images/spark/ingestion_to_bronze.py).
+
+Como dito anteriormente foram escolhidos os dados de `user`, `subscription`, `credit card` e `movies`, segue o schema das tabelas **`delta`** de cada um apos a ingestão da `landing` para a **`bronze`**:
+
+```sh
+user
+ |-- address: struct (nullable = true)
+ |    |-- city: string (nullable = true)
+ |    |-- coordinates: struct (nullable = true)
+ |    |    |-- lat: double (nullable = true)
+ |    |    |-- lng: double (nullable = true)
+ |    |-- country: string (nullable = true)
+ |    |-- state: string (nullable = true)
+ |    |-- street_address: string (nullable = true)
+ |    |-- street_name: string (nullable = true)
+ |    |-- zip_code: string (nullable = true)
+ |-- avatar: string (nullable = true)
+ |-- credit_card: struct (nullable = true)
+ |    |-- cc_number: string (nullable = true)
+ |-- date_of_birth: string (nullable = true)
+ |-- dt_current_timestamp: long (nullable = true)
+ |-- email: string (nullable = true)
+ |-- employment: struct (nullable = true)
+ |    |-- key_skill: string (nullable = true)
+ |    |-- title: string (nullable = true)
+ |-- first_name: string (nullable = true)
+ |-- gender: string (nullable = true)
+ |-- id: long (nullable = true)
+ |-- last_name: string (nullable = true)
+ |-- password: string (nullable = true)
+ |-- phone_number: string (nullable = true)
+ |-- social_insurance_number: string (nullable = true)
+ |-- subscription: struct (nullable = true)
+ |    |-- payment_method: string (nullable = true)
+ |    |-- plan: string (nullable = true)
+ |    |-- status: string (nullable = true)
+ |    |-- term: string (nullable = true)
+ |-- uid: string (nullable = true)
+ |-- user_id: long (nullable = true)
+ |-- username: string (nullable = true)
+ |-- ingestion_time: timestamp (nullable = false)
+ |-- source_system: string (nullable = false)
+ |-- user_name: string (nullable = false)
+ |-- ingestion_type: string (nullable = false)
+ |-- base_format: string (nullable = false)
+ |-- file_size: integer (nullable = false)
+ |-- rows_written: integer (nullable = false)
+ |-- schema: string (nullable = false)
+```
+```sh
+subscription
+ |-- dt_current_timestamp: long (nullable = true)
+ |-- id: long (nullable = true)
+ |-- payment_method: string (nullable = true)
+ |-- payment_term: string (nullable = true)
+ |-- plan: string (nullable = true)
+ |-- status: string (nullable = true)
+ |-- subscription_term: string (nullable = true)
+ |-- uid: string (nullable = true)
+ |-- user_id: long (nullable = true)
+ |-- ingestion_time: timestamp (nullable = false)
+ |-- source_system: string (nullable = false)
+ |-- user_name: string (nullable = false)
+ |-- ingestion_type: string (nullable = false)
+ |-- base_format: string (nullable = false)
+ |-- file_size: integer (nullable = false)
+ |-- rows_written: integer (nullable = false)
+ |-- schema: string (nullable = false)
+```
+```sh
+credit card
+ |-- credit_card_expiry_date: string (nullable = true)
+ |-- credit_card_number: string (nullable = true)
+ |-- credit_card_type: string (nullable = true)
+ |-- dt_current_timestamp: long (nullable = true)
+ |-- id: long (nullable = true)
+ |-- uid: string (nullable = true)
+ |-- user_id: long (nullable = true)
+ |-- ingestion_time: timestamp (nullable = false)
+ |-- source_system: string (nullable = false)
+ |-- user_name: string (nullable = false)
+ |-- ingestion_type: string (nullable = false)
+ |-- base_format: string (nullable = false)
+ |-- file_size: integer (nullable = false)
+ |-- rows_written: integer (nullable = false)
+ |-- schema: string (nullable = false)
+```
+```sh
+movies
+ |-- adult: string (nullable = true)
+ |-- belongs_to_collection: string (nullable = true)
+ |-- dt_current_timestamp: long (nullable = true)
+ |-- genres: string (nullable = true)
+ |-- id: string (nullable = true)
+ |-- imdb_id: string (nullable = true)
+ |-- original_language: string (nullable = true)
+ |-- original_title: string (nullable = true)
+ |-- overview: string (nullable = true)
+ |-- popularity: string (nullable = true)
+ |-- production_companies: string (nullable = true)
+ |-- production_countries: string (nullable = true)
+ |-- release_date: string (nullable = true)
+ |-- revenue: double (nullable = true)
+ |-- status: string (nullable = true)
+ |-- title: string (nullable = true)
+ |-- user_id: long (nullable = true)
+ |-- vote_average: double (nullable = true)
+ |-- vote_count: double (nullable = true)
+ |-- ingestion_time: timestamp (nullable = false)
+ |-- source_system: string (nullable = false)
+ |-- user_name: string (nullable = false)
+ |-- ingestion_type: string (nullable = false)
+ |-- base_format: string (nullable = false)
+ |-- file_size: integer (nullable = false)
+ |-- rows_written: integer (nullable = false)
+ |-- schema: string (nullable = false)
+```
+ [A segunda etapa do pipeline](/images/spark/bronze_to_silver.py), consiste em tratar os dados de **`user`, `subscription`, `credit_card` e `movies`**, criando tabelas de dominio fazendo um join das tabelas **`users`**, **`subscription`** e **`credi card`** em uma nova tabela de dominio chamada ***`subcribers`***. Em adição, nesta etapa também foi criada uma outra tabela de dominio chamada ***`voters`***, que nada mais é a junção da tabela **`users`** e **`movies`**. Os dados de cada uma destas tabelas foram tratados e renomeados para atenderem ao proposito de uma tabela de dominio.
+
+ Nesta etapa também foi adicionado a informação complementar **`processing_time`** em ambas as tabelas de dominio. Segue o schema das tabelas **`subscribers`** e **`voters`**, respectivamente:
+
+ ```sh
+ subscribers
+ |-- user_id: long (nullable = true)
+ |-- user_complete_name: string (nullable = false)
+ |-- user_complete_address: string (nullable = false)
+ |-- user_job: string (nullable = true)
+ |-- user_ingestion_time: timestamp (nullable = true)
+ |-- user_source_system: string (nullable = true)
+ |-- user_user_name: string (nullable = true)
+ |-- user_ingestion_type: string (nullable = true)
+ |-- user_base_format: string (nullable = true)
+ |-- user_file_size: integer (nullable = true)
+ |-- user_rows_written: integer (nullable = true)
+ |-- user_schema: string (nullable = true)
+ |-- subscription_user_id: long (nullable = true)
+ |-- subscription_plan: string (nullable = true)
+ |-- subscription_price: decimal(4,2) (nullable = false)
+ |-- subscription_status: string (nullable = true)
+ |-- subscription_importance: string (nullable = true)
+ |-- subscription_event_time: long (nullable = true)
+ |-- credit_card_user_id: long (nullable = true)
+ |-- credit_card_number: string (nullable = true)
+ |-- credit_card_expiry_date: string (nullable = true)
+ |-- credit_card_type: string (nullable = true)
+ |-- credit_card_event_time: long (nullable = true)
+ |-- credit_card_ingestion_time: timestamp (nullable = true)
+ |-- credit_card_source_system: string (nullable = true)
+ |-- credit_card_user_name: string (nullable = true)
+ |-- credit_card_ingestion_type: string (nullable = true)
+ |-- credit_card_base_format: string (nullable = true)
+ |-- credit_card_file_size: integer (nullable = true)
+ |-- credit_card_rows_written: integer (nullable = true)
+ |-- credit_card_schema: string (nullable = true)
+ |-- processing_time: timestamp (nullable = false)
+ ```
+ ```sh
+voters
+ |-- user_id: long (nullable = true)
+ |-- user_complete_name: string (nullable = false)
+ |-- user_complete_address: string (nullable = false)
+ |-- user_job: string (nullable = true)
+ |-- user_ingestion_time: timestamp (nullable = true)
+ |-- user_source_system: string (nullable = true)
+ |-- user_user_name: string (nullable = true)
+ |-- user_ingestion_type: string (nullable = true)
+ |-- user_base_format: string (nullable = true)
+ |-- user_file_size: integer (nullable = true)
+ |-- user_rows_written: integer (nullable = true)
+ |-- user_schema: string (nullable = true)
+ |-- movies_user_id: long (nullable = true)
+ |-- movies_adult: string (nullable = true)
+ |-- movies_title: string (nullable = true)
+ |-- movies_popularity: double (nullable = true)
+ |-- movies_vote_average: double (nullable = true)
+ |-- movies_vote_count: double (nullable = true)
+ |-- movies_release_date: string (nullable = true)
+ |-- movies_genres_name: string (nullable = true)
+ |-- movies_event_time: long (nullable = true)
+ |-- movies_ingestion_time: timestamp (nullable = true)
+ |-- movies_source_system: string (nullable = true)
+ |-- movies_user_name: string (nullable = true)
+ |-- movies_ingestion_type: string (nullable = true)
+ |-- movies_base_format: string (nullable = true)
+ |-- movies_file_size: integer (nullable = true)
+ |-- movies_rows_written: integer (nullable = true)
+ |-- movies_schema: string (nullable = true)
+ |-- processing_time: timestamp (nullable = false)
+ ```
+
+ E por fim na [terceira etapa do pipeline](/images/spark/silver_to_gold.py), consiste basicamente em criar uma nova tabela na camada **`gold`** com as informações das tabelas de dominio da camada **`silver`**, com algumas colunas renomeadas mais alguns calculos simples, para servirem o proposito de entregar(servir) os dados destas tabelas tratadas para por exemplo um time de cientistas de dados. Nesta etapa foram criadas duas novas tabelas delta. As tabelas **`subers`** e **`voters`**, que correspondem as tabelas **`subscribers`** e **`voters`** da camada **`silver`**, respectivamente. Segue o schema de ambas as tabelas:
+
+ ```sh
+ subers
+ |-- id: long (nullable = true)
+ |-- name: string (nullable = true)
+ |-- address: string (nullable = true)
+ |-- plan: string (nullable = true)
+ |-- importance: string (nullable = true)
+ |-- status: string (nullable = true)
+ |-- card: string (nullable = true)
+ |-- time_to_process: long (nullable = true)
+ |-- event_time: timestamp (nullable = false)
+```
+```sh
+voters
+ |-- id: long (nullable = true)
+ |-- name: string (nullable = true)
+ |-- title: string (nullable = true)
+ |-- popularity: double (nullable = true)
+ |-- average: double (nullable = true)
+ |-- count: double (nullable = true)
+ |-- release: string (nullable = true)
+ |-- genre: string (nullable = true)
+ |-- time_to_process: long (nullable = true)
+ |-- event_time: timestamp (nullable = false)
+ ```
+
 <!--
-
 kubectl apply -f dags/spark_jobs/delivery_data_from_silver_to_gold.yaml -n processing
-kubectl logs -f delivery-data-from-silver-to-gold-driver -n processing
+kubectl logs -f transformation-and-enrichment-from-bronze-to-silver -n processing
 kubectl delete sparkapplication delivery-data-from-silver-to-gold -n processing
-https://docs.delta.io/latest/releases.html
-
  -->
-
 ## Estrutura de Arquivos
 
 A estrutura de pastas está da seguinte maneira:

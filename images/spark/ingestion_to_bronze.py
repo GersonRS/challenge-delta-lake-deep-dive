@@ -137,5 +137,10 @@ if __name__ == "__main__":
         "s3a://lakehouse/bronze/movies/"
     )
 
+    df_user.printSchema()
+    df_subscription.printSchema()
+    df_credit_card.printSchema()
+    df_movies.printSchema()
+
     # stop session
     spark.stop()

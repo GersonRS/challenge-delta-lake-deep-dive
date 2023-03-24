@@ -263,5 +263,8 @@ if __name__ == "__main__":
     inner_join_users_with_movies.write.format("delta").mode("overwrite").save(
         "s3a://lakehouse/silver/voters"
     )
+
+    inner_join_user_subscribers_with_credit_card.printSchema()
+    inner_join_users_with_movies.printSchema()
     # stop session
     spark.stop()
