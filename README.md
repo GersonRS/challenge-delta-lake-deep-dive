@@ -47,11 +47,9 @@
 # Sobre o Projeto
 
 
-Esse projeto tem como propósito realizar uma solução para o desafio do workshop construindo seu próprio Data Lakehouse usando o Delta Lake. [Link do desafio aqui!](https://github.com/GersonRS/ws-delta-lake-deep-dive/tree/main/challenge)
+O projeto visa solucionar o [desafio do workshop "Construindo seu próprio Data Lakehouse usando o Delta Lake"](https://github.com/GersonRS/ws-delta-lake-deep-dive/tree/main/challenge), que consiste em criar um pipeline de dados usando a arquitetura Medalion (Bronze, Silver e Gold), utilizando o Delta Lake.
 
-O projeto aqui detalhado tem como propósito criar uma POC (prova de conceito) única e exclusivamente afim de solucionar o desafio, independentemente das tecnologias utilizadas.
-
-Este projeto visa a criação de um pipeline de dados que usa a arquitetura do medalhão [Bronze, Silver & Gold], que possa ser utilizado como uma POC, visto que o processo de criação e configuração de um pipeline de dados de um projeto usando este tipo de arquitetura pode gerar certa complexidade e muitas vezes até erros que atrasam o processo, atrapalhando assim o fluxo de desenvolvimento.
+O objetivo deste repositório é detalhar a criação de uma prova de conceito (POC) que soluciona o desafio, independentemente das tecnologias utilizadas. Ele visa criar um pipeline de dados que use a arquitetura Bronze, Silver e Gold, que possa ser utilizado como uma POC e um ponto de partida para projetos mais complexos, visto que o processo de criação e configuração de um pipeline de dados que segue essa arquitetura pode gerar complexidade e muitas vezes erros que atrasam o processo, atrapalhando o fluxo de desenvolvimento. A arquitetura em camadas é útil para garantir a qualidade dos dados e permitir que diferentes times possam acessar e usar dados em diferentes níveis de agregação.
 
 # Fluxo de versionamento:
 Projeto segue regras de versionamento [gitflow](https://www.atlassian.com/br/git/tutorials/comparing-workflows/gitflow-workflow).
@@ -60,9 +58,9 @@ Projeto segue regras de versionamento [gitflow](https://www.atlassian.com/br/git
 
 Abaixo segue o que foi utilizado na criação deste projeto:
 
-- [Minikube](https://minikube.sigs.k8s.io/docs/start/) - O Minikube é uma ferramenta de código aberto que permite criar um ambiente de teste do Kubernetes em sua máquina local. Ele usa uma máquina virtual para criar um cluster de um único nó, permitindo que desenvolvedores experimentem com o Kubernetes sem precisar de um ambiente de produção completo. Com o Minikube, é possível criar e implantar aplicativos em um cluster Kubernetes em sua máquina local;
-- [Helm](https://helm.sh/) - Helm é uma ferramenta de gerenciamento de pacotes de código aberto para o Kubernetes. Ele permite que desenvolvedores empacotem aplicativos Kubernetes em um formato padrão chamado de gráfico, que inclui todos os recursos necessários para implantar o aplicativo, incluindo configurações e dependências. O Helm torna mais fácil instalar, atualizar e gerenciar aplicativos Kubernetes complexos, como bancos de dados, aplicativos de machine learning, sistemas de mensagens e muito mais. Ele também fornece um repositório de gráficos para compartilhar e reutilizar pacotes de recursos com a comunidade Kubernetes;
-- [ArgoCD](https://argo-cd.readthedocs.io/en/stable/) - O Argo CD, é uma ferramenta declarativa que usa a abordagem GitOps para implantar aplicações no Kubernetes, ele pode ser usado para gerenciar várias aplicações em diferentes clusters Kubernetes a partir de um único ponto. Ele pode se conectar a repositórios git públicos e privados, é gratuito, tem o código fonte aberto, é um projeto incubado pela CNCF, possui uma interface web de visualização e gerenciamento dos recursos, mas também pode ser configurado via linha de comando;
+- [Minikube](https://minikube.sigs.k8s.io/docs/start/) - Ferramenta de código aberto que permite criar um ambiente de teste do Kubernetes em sua máquina local. Com o Minikube, é possível criar e implantar aplicativos em um cluster Kubernetes em sua máquina local.
+- [Helm](https://helm.sh/) - Ferramenta de gerenciamento de pacotes de código aberto para o Kubernetes. O Helm permite empacotar aplicativos Kubernetes em um formato padrão chamado de gráfico, que inclui todos os recursos necessários para implantar o aplicativo, incluindo configurações e dependências.
+- [ArgoCD](https://argo-cd.readthedocs.io/en/stable/) - Ferramenta declarativa que usa a abordagem GitOps para implantar aplicações no Kubernetes. O Argo CD é gratuito, tem código aberto, é um projeto incubado pela CNCF, e possui uma interface web de visualização e gerenciamento dos recursos, mas também pode ser configurado via linha de comando.
 - [Spark](https://spark.apache.org/) - O Spark é um framework de processamento de dados distribuído e de código aberto, que permite executar processamento de dados em larga escala, incluindo processamento em batch, streaming, SQL, machine learning e processamento de gráficos. Ele foi projetado para ser executado em clusters de computadores e fornece uma interface de programação fácil de usar para desenvolvedores;
 - [Airflow](https://airflow.apache.org/) - O Airflow é uma plataforma de orquestração de fluxo de trabalho de dados de código aberto que permite criar, agendar e monitorar fluxos de trabalho complexos de processamento de dados. Ele usa uma linguagem de definição de fluxo de trabalho baseada em Python e possui uma ampla gama de conectores pré-construídos para trabalhar com diferentes sistemas de armazenamento de dados, bancos de dados e ferramentas de processamento de dados;
 - [Reflector](https://github.com/emberstack/kubernetes-reflector) - O Reflector é uma ferramenta de sincronização de estado de código aberto que permite sincronizar recursos Kubernetes em diferentes clusters ou namespaces. Ele usa a abordagem de controlador de reconciliação para monitorar e atualizar automaticamente o estado dos recursos Kubernetes com base em um estado desejado especificado;
@@ -73,32 +71,30 @@ Abaixo segue o que foi utilizado na criação deste projeto:
 
 # Começando
 
-Para conseguir utilizar o projeto, seja através de um ambiente em cloud ou um cluster local, siga os passos abaixo.
+Este projeto contém uma solução de desafio que pode ser executada em um ambiente local ou em um ambiente em cloud. Para utilizar a solução, você precisará fazer um **`fork`** deste projeto e seguir os passos descritos abaixo.
 
 ## Pré-requisitos
 
-Antes de seguirmos para as configurações e uso da solução do desafio, é ideal que você tenha o ambiente configurado para criar, testar e executar o projeto, para isso você pode seguir o guia abaixo:
+Antes de prosseguir com a configuração e uso da solução, você precisará fazer um **`fork`** deste projeto e configurar um ambiente de desenvolvimento local para criar, testar e executar o projeto e ter uma chave ssh configurada em seu computador. Para isso, siga o guia abaixo:
 
 ### instalação do cluster
 
-Primeiramente precisamos montar um ambiente com um cluster kubernetes local para que possamos executar nossa aplicação e execução do pipeline de dados.
+O primeiro passo é montar um ambiente com um cluster Kubernetes local para executar a aplicação e o pipeline de dados. Para esta POC, usaremos o cluster de Kubernetes **[minikube](https://minikube.sigs.k8s.io/docs/)**. [Siga este guia de instalação para instalar o Minikube](https://minikube.sigs.k8s.io/docs/start/).
 
-Para esta POC usaremos o cluster de kubernetes **[minikube](https://minikube.sigs.k8s.io/docs/)**. Para instalar o minikube basta seguir [este guia de instalação](https://minikube.sigs.k8s.io/docs/start/).
+Também usaremos o **[helm](https://helm.sh/)** para nos ajudar a instalar algumas aplicações. [Siga este guia de instalação para instalar o Helm](https://helm.sh/docs/intro/install/).
 
-Também usaremos o **[helm](https://helm.sh/)** para nos auxiliar na instalação de algumas aplicações. Para instalar o helm [siga este guia](https://helm.sh/docs/intro/install/).
+Após instalar esses pré-requisitos, é hora de iniciar o nosso cluster Minikube. Para que tudo ocorra bem, é aconselhável usar um cluster de no mínimo 8GB de memória e 2 CPUs. Execute o seguinte comando no terminal:
 
-Após estes dois pre-requisitos instalados é hora de iniciar o nosso cluster minikube:
-> para que ocorra tudo bem é aconselhavel usar um cluster de no minimo 8Gb e 2 CPUs
 ```
 minikube start --memory=8000 --cpus=2
 ```
 
-> Para que alguns serviços sejam acessiveis via loadbalancer no minikube, é necessario que você use o [tunelamento do minikube](https://minikube.sigs.k8s.io/docs/handbook/accessing/#example-of-loadbalancer).
-> Para isto abra uma nova aba do seu terminal e digite o seguinte commando:
->
->`minikube tunnel`
->
-> Com isto o seu ambiente esta pronto para receber acessos via loadbalancer
+Para acessar alguns serviços via loadbalancer no Minikube, é necessário utilizar o [tunelamento do minikube](https://minikube.sigs.k8s.io/docs/handbook/accessing/#example-of-loadbalancer). Para isso, abra uma nova aba no seu terminal e execute o seguinte comando:
+```sh
+minikube tunnel
+```
+
+Com isso, o seu ambiente estará pronto para receber acessos via loadbalancer.
 
 ### Instalação das ferramentas
 
@@ -155,25 +151,27 @@ argocd repo add git@github.com:GersonRS/big-data-on-k8s.git --ssh-private-key-pa
 
 > Lembrando que para este comando funcionar é necessario que você tenha uma `chave ssh` configurada para se conectar com o github no seu computador. Caso não tenha, use [este guia](https://docs.github.com/pt/authentication/connecting-to-github-with-ssh/generating-a-new-ssh-key-and-adding-it-to-the-ssh-agent) para criar uma e [adiciona-la ao github](https://docs.github.com/pt/authentication/connecting-to-github-with-ssh/adding-a-new-ssh-key-to-your-github-account).
 
-Agora é hora de adicionar as outras ferramentas necesarias para o nosso pipeline de dados. E para isto precisamos criar `secrets` para armazenar senhas e informações censiveis, que  sejam acessiveis pelas aplicações e processos do **`Spark`**, por isso é necessario que eles estejam no namespace onde esta rodando a aplicação e também no namespace processing, onde será executado os processos do `spark`. Então para isto podemos usar o **[Reflactor](https://github.com/EmberStack/kubernetes-reflector)**, que faz a replicação dos secrets nos namespaces que precisamos e não há a necessidade de re-criar os secrets em namespaces diferentes, e para isto execute este comando:
+É hora de adicionar as ferramentas necessárias para o pipeline de dados. Para isso, é preciso criar secrets para armazenar senhas e informações confidenciais acessíveis pelas aplicações e processos do Spark. É necessário que eles estejam no namespace onde a aplicação está rodando e também no namespace processing, onde serão executados os processos do spark. Para realizar essa replicação dos secrets em diferentes namespaces, podemos usar o **[Reflactor](https://github.com/EmberStack/kubernetes-reflector)**, que evita a necessidade de recriar os secrets em namespaces diferentes. Para utilizá-lo, basta executar o comando a seguir:
+
+Agora é hora de adicionar as outras ferramentas necesarias para o nosso pipeline de dados. E para isto precisamos criar `secrets` para armazenar senhas e informações censiveis, que  sejam acessiveis pelas aplicações e processos do **`Spark`**, por isso é necessario que eles estejam no namespace onde esta rodando a aplicação e também no namespace processing, onde será executado os processos do `spark`. Então para isto podemos usar o **[Reflactor](https://github.com/EmberStack/kubernetes-reflector)**, que ajudará a replicar os secrets nos namespaces necessários e a manter a segurança dos dados. Além disso, os comandos para instalar as configurações de acesso são importantes para garantir que apenas as pessoas autorizadas possam acessar os recursos do seu cluster, e para isto execute este comando:
 
 ```sh
 kubectl apply -f manifests/management/reflector.yaml
 ```
 
-> Antes de executar os comando você pode alterar os secrets dos arquivos localizados na pasta `secrets/`, caso queira mudar os passwords de acessos aos databases e storage
+> Antes de executar os comandos, você pode alterar os secrets dos arquivos localizados na pasta `secrets/` se quiser mudar as senhas de acesso aos bancos de dados e ao storage.
 
-Após o reflator esta em funcionamento, execute o comando que cria os secrets nos namespaces necessarios: 
+Após o Reflector estar funcionando, execute o comando que cria os secrets nos namespaces necessários:
 
 ```sh
 # secrets
 kubectl apply -f manifests/misc/secrets.yaml
 ```
 
-> Caso não queira instalar o Reflactor para automatizar o processo de criar o secret em varios namespaces diferentes, você pode faze manualmente a replicação do secret para outro namespace executando este comando: 
+> Caso não queira instalar o Reflactor para automatizar o processo de criar o secret em vários namespaces diferentes, você pode replicar manualmente o secret para outro namespace executando este comando:
 `kubectl get secret minio-secrets -n deepstorage -o yaml | sed s/"namespace: deepstorage"/"namespace: processing"/| kubectl apply -n processing -f -`
 
-Uma vez que, os secrets estejam configurados podemos começar instalando os databases e storage do nosso pipeline de dados com o seguinte comando:
+Uma vez que os secrets estejam configurados, é possível instalar os bancos de dados e o storage do pipeline de dados com o seguinte comando:
 
 ```sh
 # databases
@@ -182,7 +180,7 @@ kubectl apply -f manifests/database/postgres.yaml
 kubectl apply -f manifests/deepstorage/minio.yaml
 ```
 
-E por fim instale o Spark e o Airflow, juntamente com suas permições para executar os processos spark, executando os seguintes comandos:
+Por fim, instale o Spark e o Airflow, juntamente com suas permissões para executar os processos do Spark, executando os seguintes comandos:
 
 ```sh
 # add & update helm list repos
@@ -201,70 +199,69 @@ eval $(minikube docker-env)
 docker build -f images/airflow/dockerfile images/airflow/ -t airflow:0.1
 ``` -->
 
-Antes de instalar o airflow é preciso atender um certo requisito, que é criar um secret contendo a sua `chave ssh` para o airflow baixar as `DAGs` necessarias atraves do gitSync. é possivel criar com o seguinte comando:
+Antes de instalar o Airflow, é preciso atender a um requisito: criar um secret contendo sua `chave ssh`, para que o Airflow possa baixar as `DAGs` necessárias por meio do `gitSync`. É possível criar esse secret com o seguinte comando:
 
-> Lembrando que para isto você deve ter a `chave ssh` configurada em sua maquina.
+> Lembrando que você deve ter a `chave ssh` configurada em sua máquina.
 
 ```sh
 kubectl create secret generic airflow-ssh-secret --from-file=gitSshKey=$HOME/.ssh/id_ed25519 -n orchestrator
 ```
-<!-- ```sh 
-eval $(minikube docker-env)
-docker build -f images/airflow/dockerfile images/airflow/ -t airflow:0.1
-``` -->
 
 ```sh
 # orchestrator
 kubectl apply -f manifests/orchestrator/airflow.yaml
 ```
 
-Em seguida instale as configurações de acesso:
+Em seguida, instale as configurações de acesso:
 
 ```sh
 kubectl apply -f manifests/misc/access-control.yaml
 ```
-
-Com isto, temos o ambiente de desenvolvimento e de execução instalado e pronto.
+Ótimo, agora que você configurou as ferramentas necessárias, temos o ambiente de desenvolvimento e de execução instalado e pronto para uso.
 
 ### Executando o projeto
 
 
-Antes de tudo é preciso ter uma `imagem spark` que contenha todos os jars necessarios para a execução do nosso pipeline e para criar uma imagem spark com estas especificações execute:
+Antes de tudo, é necessário possuir uma `imagem do Spark` que contenha todos os JARs necessários para a execução do nosso pipeline. Para criar uma imagem do Spark com essas especificações, execute:
 
 ```sh
 eval $(minikube docker-env)
 docker build --no-cache -f images/spark/dockerfile images/spark/ -t spark:0.1
 ```
-Neste projeto esta sendo usada a versão 3.3.2 do spark e 2.2.0 do delta, juntamente com todas as suas libs e jars nas versões compativeis seguindo as compatibilidades do delta [neste link](https://docs.delta.io/latest/releases.html) e neste link.
+Neste projeto, está sendo utilizada a versão 3.3.2 do Spark e a versão 2.2.0 do Delta, juntamente com todas as suas bibliotecas e JARs nas versões compatíveis, seguindo as compatibilidades do Delta [neste link](https://docs.delta.io/latest/releases.html) e neste link.
 
-Apos a image spark esta criada abra a UI web do airflow. Caso não saiba qual foi o ip atribuido ao webserver do airflow execute o comando a seguir para descobrir se ip:
+Após a imagem do Spark ser criada, abra a interface web do Airflow. Caso não saiba qual foi o IP atribuído ao webserver do Airflow, execute o seguinte comando para descobrir o IP:
+
 ```sh
 kubectl get services -n orchestrator -l component=webserver,argocd.argoproj.io/instance=airflow -o jsonpath="{.items[0].status.loadBalancer.ingress[0].ip}"
 ```
 
-Uma vez que esteja na UI do airflow ative o pipeline de dados `pipeline-delta-lake-deep-dive-complete` e veja a magia acontecer. Ou se preferir você também pode executar cada etapa separadamene seguindo é claro a sequencia:
+Uma vez na interface do Airflow, ative o pipeline de dados `pipeline-delta-lake-deep-dive-complete` e veja a mágica acontecer. Ou, se preferir, você também pode executar cada etapa separadamente, seguindo a sequência:
   * `ingestion-from-local-data-file-to-bronze-tables`
   * `transformation-and-enrichment-from-bronze-to-silver`
   * `delivery-data-from-silver-to-gold`
 
-caso não deseje executar o pipeline pelo airflow, você pode executar o pipeline de dados executando os seguintes comandos em sequencia:
+Caso não deseje executar o pipeline pelo Airflow, você pode executar o pipeline de dados executando os seguintes comandos em sequência:
 ```sh
 kubectl apply -f dags/spark_jobs/ingestion_from_local_data_file_to_bronze_tables.yaml -n processing
 kubectl apply -f dags/spark_jobs/transform_and_enrichment_from_bronze_to_silver.yaml -n processing
 kubectl apply -f dags/spark_jobs/delivery_data_from_silver_to_gold.yaml -n processing
 ```
+Para verificar os arquivos no `data lakehouse`, acesse a interface web do `MinIO` e use as credenciais de acesso encontradas no arquivo *[minio-secrets.yaml](/secrets/minio-secrets.yaml)* na pasta *[secrets](/secrets/)*. Caso não saiba o IP atribuído ao MinIO, execute:
 
-Para verificar os arquivos no `data lakehouse` acesse a UI do `minio` e use as credenciais de acesso encontradas no aquivo *[minio-secrets.yaml](/secrets/minio-secrets.yaml)* na pasta *[secrets](/secrets/)*. Caso não saiba o ip atribuido ao minio execute:
 ```sh
 kubectl get services -n deepstorage -l app.kubernetes.io/name=minio -o jsonpath="{.items[0].status.loadBalancer.ingress[0].ip}"
 ```
-Caso queira pegar as credenciais de acesso do `minio`, execute:
+Caso queira obter as credenciais de acesso do `MinIO`, execute:
 ```sh
 echo "user: $(kubectl get secret minio-secrets -n deepstorage -o jsonpath="{.data.root-user}" | base64 -d)"
 echo "password: $(kubectl get secret minio-secrets -n deepstorage -o jsonpath="{.data.root-password}" | base64 -d)"
 ```
 
 ## Pipeline Spark
+
+
+O Pipeline Spark é um processo de três etapas que tem como objetivo criar uma camada de dados organizada e tratada para que possa ser utilizada por times de análise de dados. As etapas incluem a ingestão dos dados brutos (na camada Bronze), o tratamento e organização dos dados (na camada Silver) e a criação de uma tabela final que será utilizada pelos cientistas de dados (na camada Gold).
 
 Para este desafio foi escolhida 4 conjunto de dados **(`user`, `subscription`, `credit_card` e `movies`)**.
 Os codigos spark foram escritos em `python` ***(Pyspark)*** e adicionados a uma [imagem docker](images/spark/dockerfile). Optei colocar todos os meus códigos spark na mesma `imagem`, pela simplicidade de desenvolver e explicar. Apesar de que este pode não ser a melhor pratica para esse tipo de problema(mas funciona).
@@ -273,7 +270,7 @@ Os dados da **`landing`** disponibilizados pelo desafio, também foram incluidos
 
 ### Carregando os dados na **`Bronze`**
 
-[A primaira etapa do pipeline](/images/spark/ingestion_to_bronze.py), consiste em pegar os dados da `landing` (que estão na [imagem](/images/spark/dockerfile)) e transforma-los em `tabelas` **`delta`** em um **`lakehouse`**. Além disso são adicionados informações para analises posteriores como por exemplo: `ingestion_time`, `file_size` e dentre outros. É possivel ver todos as informações adicionais nas linhas `56-63` do arquivo [ingestion_to_bronze.py](/images/spark/ingestion_to_bronze.py).
+[Na primeira etapa do pipeline](/images/spark/ingestion_to_bronze.py), os dados brutos são carregados da pasta landing (que estão na [imagem](/images/spark/dockerfile)) e transformados em tabelas Delta no lakehouse, criado no Minio. A criação de tabelas Delta facilita o gerenciamento dos dados, permitindo que novos dados possam ser adicionados e atualizados posteriormente. Também são adicionadas informações adicionais como ingestion_time e file_size, que podem ser úteis para análises posteriores. É possivel ver todos as informações adicionais nas linhas `56-63` do arquivo [ingestion_to_bronze.py](/images/spark/ingestion_to_bronze.py).
 
 Como dito anteriormente foram escolhidos os dados de `user`, `subscription`, `credit card` e `movies`, segue o schema das tabelas **`delta`** de cada um apos a ingestão da `landing` para a **`bronze`**:
 
@@ -390,9 +387,9 @@ movies
  |-- rows_written: integer (nullable = false)
  |-- schema: string (nullable = false)
 ```
- [A segunda etapa do pipeline](/images/spark/bronze_to_silver.py), consiste em tratar os dados de **`user`, `subscription`, `credit_card` e `movies`**, criando tabelas de dominio fazendo um join das tabelas **`users`**, **`subscription`** e **`credi card`** em uma nova tabela de dominio chamada ***`subcribers`***. Em adição, nesta etapa também foi criada uma outra tabela de dominio chamada ***`voters`***, que nada mais é a junção da tabela **`users`** e **`movies`**. Os dados de cada uma destas tabelas foram tratados e renomeados para atenderem ao proposito de uma tabela de dominio.
+[Na segunda etapa](/images/spark/bronze_to_silver.py), os dados de diferentes fontes, como **`user`**, **`subscription`**, **`credit_card`** e **`movies`**, são tratados e organizados em tabelas de `domínio`. Nesta etapa, tabelas de `domínio` como **`subscribers`** e **`voters`** são criadas, que são basicamente junções de diferentes tabelas de fontes. Os dados são tratados e renomeados para que sejam mais úteis para análises futuras.
 
- Nesta etapa também foi adicionado a informação complementar **`processing_time`** em ambas as tabelas de dominio. Segue o schema das tabelas **`subscribers`** e **`voters`**, respectivamente:
+Nesta etapa também foi adicionado a informação complementar **`processing_time`** em ambas as tabelas de `domínio`. Segue o schema das tabelas **`subscribers`** e **`voters`**, respectivamente:
 
  ```sh
  subscribers
@@ -462,8 +459,7 @@ voters
  |-- movies_schema: string (nullable = true)
  |-- processing_time: timestamp (nullable = false)
  ```
-
- E por fim na [terceira etapa do pipeline](/images/spark/silver_to_gold.py), consiste basicamente em criar uma nova tabela na camada **`gold`** com as informações das tabelas de dominio da camada **`silver`**, com algumas colunas renomeadas mais alguns calculos simples, para servirem o proposito de entregar(servir) os dados destas tabelas tratadas para por exemplo um time de cientistas de dados. Nesta etapa foram criadas duas novas tabelas delta. As tabelas **`subers`** e **`voters`**, que correspondem as tabelas **`subscribers`** e **`voters`** da camada **`silver`**, respectivamente. Segue o schema de ambas as tabelas:
+[Na terceira etapa do pipeline](/images/spark/silver_to_gold.py), uma nova tabela é criada na camada **`Gold`**, com as informações tratadas das tabelas de `domínio` da camada **`Silver`**. As tabelas **`subscribers`** e **`voters`** são renomeadas como **`subers`** e **`voters`**, respectivamente, e novas `colunas` e cálculos são adicionados para que sejam úteis para análises futuras. Por fim, as tabelas resultantes são entregues aos cientistas de dados para que possam ser utilizadas em análises mais aprofundadas. Segue o schema de ambas as tabelas:
 
  ```sh
  subers
@@ -491,6 +487,7 @@ voters
  |-- event_time: timestamp (nullable = false)
  ```
 
+Certifique-se de testar e validar seus pipelines de dados antes de implantá-los em produção. Isso ajudará a garantir que seus processos estejam funcionando corretamente e que os dados estejam sendo tratados de maneira apropriada.
 <!--
 kubectl apply -f dags/spark_jobs/delivery_data_from_silver_to_gold.yaml -n processing
 kubectl logs -f transformation-and-enrichment-from-bronze-to-silver -n processing
