@@ -60,9 +60,14 @@ Projeto segue regras de versionamento [gitflow](https://www.atlassian.com/br/git
 
 Abaixo segue o que foi utilizado na criação deste projeto:
 
-- [ArgoCD](https://argo-cd.readthedocs.io/en/stable/) - Argo CD, é uma ferramenta declarativa que usa a abordagem GitOps para implantar aplicações no Kubernetes, ele pode ser usado para gerenciar várias aplicações em diferentes clusters Kubernetes a partir de um único ponto. Ele pode se conectar a repositórios git públicos e privados, é gratuito, tem o código fonte aberto, é um projeto incubado pela CNCF, possui uma interface web de visualização e gerenciamento dos recursos, mas também pode ser configurado via linha de comando;
-
-to do o resto
+- [Minikube](https://minikube.sigs.k8s.io/docs/start/) - O Minikube é uma ferramenta de código aberto que permite criar um ambiente de teste do Kubernetes em sua máquina local. Ele usa uma máquina virtual para criar um cluster de um único nó, permitindo que desenvolvedores experimentem com o Kubernetes sem precisar de um ambiente de produção completo. Com o Minikube, é possível criar e implantar aplicativos em um cluster Kubernetes em sua máquina local;
+- [Helm](https://helm.sh/) - Helm é uma ferramenta de gerenciamento de pacotes de código aberto para o Kubernetes. Ele permite que desenvolvedores empacotem aplicativos Kubernetes em um formato padrão chamado de gráfico, que inclui todos os recursos necessários para implantar o aplicativo, incluindo configurações e dependências. O Helm torna mais fácil instalar, atualizar e gerenciar aplicativos Kubernetes complexos, como bancos de dados, aplicativos de machine learning, sistemas de mensagens e muito mais. Ele também fornece um repositório de gráficos para compartilhar e reutilizar pacotes de recursos com a comunidade Kubernetes;
+- [ArgoCD](https://argo-cd.readthedocs.io/en/stable/) - O Argo CD, é uma ferramenta declarativa que usa a abordagem GitOps para implantar aplicações no Kubernetes, ele pode ser usado para gerenciar várias aplicações em diferentes clusters Kubernetes a partir de um único ponto. Ele pode se conectar a repositórios git públicos e privados, é gratuito, tem o código fonte aberto, é um projeto incubado pela CNCF, possui uma interface web de visualização e gerenciamento dos recursos, mas também pode ser configurado via linha de comando;
+- [Spark](https://spark.apache.org/) - O Spark é um framework de processamento de dados distribuído e de código aberto, que permite executar processamento de dados em larga escala, incluindo processamento em batch, streaming, SQL, machine learning e processamento de gráficos. Ele foi projetado para ser executado em clusters de computadores e fornece uma interface de programação fácil de usar para desenvolvedores;
+- [Airflow](https://airflow.apache.org/) - O Airflow é uma plataforma de orquestração de fluxo de trabalho de dados de código aberto que permite criar, agendar e monitorar fluxos de trabalho complexos de processamento de dados. Ele usa uma linguagem de definição de fluxo de trabalho baseada em Python e possui uma ampla gama de conectores pré-construídos para trabalhar com diferentes sistemas de armazenamento de dados, bancos de dados e ferramentas de processamento de dados;
+- [Reflector](https://github.com/emberstack/kubernetes-reflector) - O Reflector é uma ferramenta de sincronização de estado de código aberto que permite sincronizar recursos Kubernetes em diferentes clusters ou namespaces. Ele usa a abordagem de controlador de reconciliação para monitorar e atualizar automaticamente o estado dos recursos Kubernetes com base em um estado desejado especificado;
+- [Minio](https://min.io/) - O Minio é um sistema de armazenamento de objetos de código aberto e de alta performance, compatível com a API Amazon S3. Ele é projetado para ser executado em clusters distribuídos e escaláveis e fornece recursos avançados de segurança e gerenciamento de dados;
+- [Postgres](https://www.postgresql.org/) - O Postgres é um sistema de gerenciamento de banco de dados relacional de código aberto, conhecido por sua confiabilidade, escalabilidade e recursos avançados de segurança. Ele é compatível com SQL e é usado em uma ampla gama de aplicativos, desde pequenos sites até grandes empresas e organizações governamentais.
 
 <!-- GETTING STARTED -->
 
@@ -190,6 +195,11 @@ helm repo update
 # processing
 kubectl apply -f manifests/processing/spark.yaml
 ```
+<!-- Para criar um imagem do airflow com algumas libs inclusas, para isto execute o seguinte comando:
+```sh 
+eval $(minikube docker-env)
+docker build -f images/airflow/dockerfile images/airflow/ -t airflow:0.1
+``` -->
 
 Antes de instalar o airflow é preciso atender um certo requisito, que é criar um secret contendo a sua `chave ssh` para o airflow baixar as `DAGs` necessarias atraves do gitSync. é possivel criar com o seguinte comando:
 
