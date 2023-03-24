@@ -78,6 +78,7 @@ list_keys = S3ListOperator(
     task_id="list_keys",
     bucket="lakehouse",
     prefix="bronze",
+    dag=dag
 )
 # [END set_tasks]
 # [START task_sequence]
