@@ -117,7 +117,7 @@ tranform = SparkKubernetesOperator(
 )
 
 transform_sensor = SparkKubernetesSensor(
-    task_id="task_spark_task_spark_transform_and_enrichment_from_bronze_to_silver_monitor",
+    task_id="task_spark_transform_and_enrichment_from_bronze_to_silver_monitor",
     namespace="processing",
     application_name="{{task_instance.xcom_pull(task_ids='task_spark_transform_and_enrichment_from_bronze_to_silver')['metadata']['name']}}",
     kubernetes_conn_id="kubernetes_default",
@@ -135,7 +135,7 @@ delivery = SparkKubernetesOperator(
 )
 
 delivery_sensor = SparkKubernetesSensor(
-    task_id="task_spark_task_spark_delivery_data_from_silver_to_gold_monitor",
+    task_id="task_spark_delivery_data_from_silver_to_gold_monitor",
     namespace="processing",
     application_name="{{task_instance.xcom_pull(task_ids='task_spark_delivery_data_from_silver_to_gold')['metadata']['name']}}",
     kubernetes_conn_id="kubernetes_default",
