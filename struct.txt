@@ -1,0 +1,38 @@
+.
+├── access-control
+├── dags
+│   └── spark_jobs
+├── images
+│   ├── airflow
+│   └── spark
+│       ├── conf
+│       └── landing
+│           ├── bank
+│           ├── beer
+│           ├── coffee
+│           ├── commerce
+│           ├── company
+│           ├── computer
+│           ├── credit_card
+│           ├── dessert
+│           ├── device
+│           ├── food
+│           ├── keywords
+│           ├── movies
+│           ├── ratings
+│           ├── restaurant
+│           ├── stripe
+│           ├── subscription
+│           ├── user
+│           └── vehicle
+├── manifests
+│   ├── database
+│   ├── deepstorage
+│   ├── management
+│   ├── misc
+│   ├── monitoring
+│   ├── orchestrator
+│   └── processing
+└── secrets
+
+35 directories

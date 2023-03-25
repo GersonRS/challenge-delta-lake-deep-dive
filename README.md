@@ -7,11 +7,19 @@
 
 <!-- PROJECT SHIELDS -->
 
-<div align="center">
+[![npm](https://img.shields.io/badge/type-Open%20Project-green?&style=plastic)](https://img.shields.io/badge/type-Open%20Project-green)
+[![GitHub last commit](https://img.shields.io/github/last-commit/GersonRS/challenge-delta-lake-deep-dive?logo=github&style=plastic)](https://github.com/GersonRS/challenge-delta-lake-deep-dive/commits/master)
+[![GitHub Issues](https://img.shields.io/github/issues/gersonrs/challenge-delta-lake-deep-dive?logo=github&style=plastic)](https://github.com/GersonRS/challenge-delta-lake-deep-dive/issues)
+[![GitHub Language](https://img.shields.io/github/languages/top/gersonrs/challenge-delta-lake-deep-dive?&logo=github&style=plastic)](https://github.com/GersonRS/challenge-delta-lake-deep-dive/search?l=python)
+[![GitHub Repo-Size](https://img.shields.io/github/repo-size/GersonRS/challenge-delta-lake-deep-dive?logo=github&style=plastic)](https://img.shields.io/github/repo-size/GersonRS/challenge-delta-lake-deep-dive)
+[![GitHub Contributors](https://img.shields.io/github/contributors/GersonRS/challenge-delta-lake-deep-dive?logo=github&style=plastic)](https://img.shields.io/github/contributors/GersonRS/challenge-delta-lake-deep-dive)
+[![GitHub Stars](https://img.shields.io/github/stars/GersonRS/challenge-delta-lake-deep-dive?logo=github&style=plastic)](https://img.shields.io/github/stars/GersonRS/challenge-delta-lake-deep-dive)
+[![NPM](https://img.shields.io/github/license/GersonRS/challenge-delta-lake-deep-dive?&style=plastic)](LICENSE)
+[![Status](https://img.shields.io/badge/status-active-success.svg)](https://img.shields.io/badge/status-active-success.svg)
 
-[![Status](https://img.shields.io/badge/status-active-success.svg)]()
-
-</div>
+<p align="center">
+  <img alt="logo" src="https://github.com/GersonRS/react-native-template-gersonrsantos-basic/raw/main/assets/logo.png"/>
+</p>
 
 <!-- PROJECT LOGO -->
 <br />
@@ -49,7 +57,7 @@
 
 O projeto visa solucionar o [desafio do workshop "Construindo seu próprio Data Lakehouse usando o Delta Lake"](https://github.com/GersonRS/ws-delta-lake-deep-dive/tree/main/challenge), que consiste em criar um pipeline de dados usando a arquitetura Medalion (Bronze, Silver e Gold), utilizando o Delta Lake.
 
-O objetivo deste repositório é detalhar a criação de uma prova de conceito (POC) que soluciona o desafio, independentemente das tecnologias utilizadas. Ele visa criar um pipeline de dados que use a arquitetura Bronze, Silver e Gold, que possa ser utilizado como uma POC e um ponto de partida para projetos mais complexos, visto que o processo de criação e configuração de um pipeline de dados que segue essa arquitetura pode gerar complexidade e muitas vezes erros que atrasam o processo, atrapalhando o fluxo de desenvolvimento. A arquitetura em camadas é útil para garantir a qualidade dos dados e permitir que diferentes times possam acessar e usar dados em diferentes níveis de agregação.
+O objetivo deste repositório é detalhar a criação de uma `prova de conceito` (`POC`) que soluciona o `desafio`, independentemente das tecnologias utilizadas. Ele visa criar um pipeline de dados que use a arquitetura **`Bronze`**, **`Silver`** e **`Gold`**, que possa ser utilizado como uma `POC` e um ponto de partida para projetos mais complexos, visto que o processo de criação e configuração de um pipeline de dados que segue essa arquitetura pode gerar complexidade e muitas vezes erros que atrasam o processo, atrapalhando o fluxo de desenvolvimento. A arquitetura em camadas `medalion` é útil para garantir a qualidade dos dados e permitir que diferentes times possam acessar e usar dados em diferentes níveis de agregação.
 
 # Fluxo de versionamento:
 Projeto segue regras de versionamento [gitflow](https://www.atlassian.com/br/git/tutorials/comparing-workflows/gitflow-workflow).
@@ -71,8 +79,7 @@ Abaixo segue o que foi utilizado na criação deste projeto:
 
 # Começando
 
-Este projeto contém uma solução de desafio que pode ser executada em um ambiente local ou em um ambiente em cloud. Para utilizar a solução, você precisará fazer um **`fork`** deste projeto e seguir os passos descritos abaixo.
-
+Antes de executar o pipeline de dados, é necessário instalar algumas aplicações que serão responsáveis por manter e gerenciar o processo. Este guia apresentará uma série de comandos para instalar as ferramentas necessárias.
 ## Pré-requisitos
 
 Antes de prosseguir com a configuração e uso da solução, você precisará fazer um **`fork`** deste projeto e configurar um ambiente de desenvolvimento local para criar, testar e executar o projeto e ter uma chave ssh configurada em seu computador. Para isso, siga o guia abaixo:
@@ -217,6 +224,15 @@ Em seguida, instale as configurações de acesso:
 ```sh
 kubectl apply -f manifests/misc/access-control.yaml
 ```
+
+Para que seja possivel o Ariflow executar de maneira independente os processos spark é preciso que ele tenha uma conexão com o cluster, e para isto é necessario passar essa informação ao Airflow. Para adicionar a conexão com o cluster ao Airflow execute:
+```sh
+kubectl get pods --no-headers -o custom-columns=":metadata.name" -n orchestrator | grep scheduler | xargs -i sh -c 'kubectl cp images/airflow/connections.json orchestrator/{}:./ -c scheduler | kubectl -n orchestrator exec {} -- airflow connections import connections.json'
+```
+<!-- export SCHEDULER_POD_NAME="$(kubectl get pods --no-headers -o custom-columns=":metadata.name" -n orchestrator | grep scheduler)"
+kubectl cp images/airflow/connections.json orchestrator/$SCHEDULER_POD_NAME:./ -c scheduler
+kubectl -n orchestrator exec $SCHEDULER_POD_NAME -- airflow connections import connections.json -->
+
 Ótimo, agora que você configurou as ferramentas necessárias, temos o ambiente de desenvolvimento e de execução instalado e pronto para uso.
 
 ### Executando o projeto
@@ -498,10 +514,13 @@ kubectl delete sparkapplication delivery-data-from-silver-to-gold -n processing
 A estrutura de pastas está da seguinte maneira:
 
 ```bash
+.
+├── access-control
 ├── dags
+│   └── spark_jobs
 ├── images
-│   ├── airflow
 │   └── spark
+│       └── landing
 ├── manifests
 │   ├── database
 │   ├── deepstorage
@@ -511,7 +530,7 @@ A estrutura de pastas está da seguinte maneira:
 │   ├── orchestrator
 │   └── processing
 └── secrets
-# 34 directories, 324 files
+# 35 directories, 327 files
 ```
 
 Serão explicados os arquivos e diretórios na seção de [Edição](#edição).
@@ -521,9 +540,11 @@ Serão explicados os arquivos e diretórios na seção de [Edição](#edição).
 
 Nesta seção haverão instruções caso você queira editar o projeto, explicando para que os diretórios são utilizados e também os arquivos de configuração.
 
+- **[access-control](/access-control/)** - Diretório contendo todos os arquivos de aplicação do projeto, é criado um diretório `manifests` para que o código da aplicação possa ser isolado em um diretório e facilmente portado para outros projetos, se necessário;
+
 - **[manifests](/manifests/)** - Diretório contendo todos os arquivos de aplicação do projeto, é criado um diretório `manifests` para que o código da aplicação possa ser isolado em um diretório e facilmente portado para outros projetos, se necessário;
 
-  - **[database](/manifests/database/)** - Diretório para guardar os arquivos de configuração das aplicações de database, por exemplo, a configuração de instalação da aplicação `[postgres](/manifests/database/postgres.yaml)`;
+  - **[database](/manifests/database/)** - Diretório para guardar os arquivos de configuração das aplicações de database, por exemplo, a configuração de instalação da aplicação **[postgres](/manifests/database/postgres.yaml)**;
 
 to do o resto
 
@@ -542,12 +563,45 @@ Contribuições são o que fazem a comunidade open source um lugar incrível par
 
 <!-- LICENSE -->
 
-## Licença
 
-Distribuído sob a licença MIT. Veja `LICENSE` para mais informações.
+## 📌 Suporte
 
-<!-- CONTACT -->
+Entre em contato comigo em um dos seguintes lugares!
 
-## Contato
+- Linkedin em [Gerson Santos](https://www.linkedin.com/in/gerson-santos-a1442a90/)
+- Instagram [gersonrsantos](https://www.instagram.com/gersonrsantos/)
 
-GersonRS - [Github](https://github.com/gersonrs) - **gersonrodriguessantos8@gmail.com**
+---
+
+## 📝 Licença
+
+<img alt="License" src="https://img.shields.io/badge/license-MIT-%2304D361?color=rgb(89,101,224)">
+
+Distribuído sob a licença MIT. Veja [LICENSE](LICENSE) para mais informações.
+
+### 📱 Social
+
+Me acompanhe nas minhas redes sociais.
+
+<p align="center">
+
+ <a href="https://twitter.com/gersonrs3" target="_blank" >
+     <img alt="Twitter" src="https://img.shields.io/badge/-Twitter-9cf?logo=Twitter&logoColor=white"></a>
+
+  <a href="https://instagram.com/gersonrsantos" target="_blank" >
+    <img alt="Instagram" src="https://img.shields.io/badge/-Instagram-ff2b8e?logo=Instagram&logoColor=white"></a>
+
+  <a href="https://www.linkedin.com/in/gersonrsantos/" target="_blank" >
+    <img alt="Linkedin" src="https://img.shields.io/badge/-Linkedin-blue?logo=Linkedin&logoColor=white"></a>
+
+  <a href="https://t.me/gersonrsantos" target="_blank" >
+    <img alt="Telegram" src="https://img.shields.io/badge/-Telegram-blue?logo=Telegram&logoColor=white"></a>
+
+  <a href="mailto:gersonrodriguessantos8@gmail.com" target="_blank" >
+    <img alt="Email" src="https://img.shields.io/badge/-Email-c14438?logo=Gmail&logoColor=white"></a>
+
+</p>
+
+---
+
+Feito com ❤️ by **Gerson**

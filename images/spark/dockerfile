@@ -29,7 +29,7 @@ USER ${spark_uid}
 RUN mkdir -p /etc/metrics/conf
 COPY conf/metrics.properties /etc/metrics/conf
 COPY conf/prometheus.yaml /etc/metrics/conf
-
-RUN pip install pathlib delta-spark
+COPY requirements.txt /
+RUN pip install --no-cache-dir -r /requirements.txt
 
 COPY ingestion_to_bronze.py bronze_to_silver.py silver_to_gold.py /app/
